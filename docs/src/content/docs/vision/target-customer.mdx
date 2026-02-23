@@ -1,0 +1,187 @@
+---
+title: "Target Customer"
+description: "Who GrowthOS is built for — and who it's not."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+## Who GrowthOS Is Built For
+
+GrowthOS targets three distinct personas, each representing a different phase of the go-to-market strategy. The primary persona drives Phase 1 revenue. The secondary persona drives upsell to the Scale tier. The tertiary persona unlocks Phase 3 channel expansion.
+
+---
+
+## Primary Persona: Growth Lead at Indie SaaS <Badge text="Painkiller" variant="tip" />
+
+This is the **day-one customer** — the person who feels the tool-sprawl pain most acutely and has the authority (and urgency) to act on it.
+
+| Attribute | Detail |
+|---|---|
+| **Company size** | 5-50 employees |
+| **Role** | Founder, Head of Growth, or Growth Lead — often wearing 3+ hats |
+| **Engineering resources** | One part-time developer allocated to growth engineering (at best) |
+| **Current tool count** | 6-10 disconnected growth tools |
+| **Current tool spend** | $200 - $800/mo ($2,400 - $9,600/yr) |
+| **Integration debt** | 10-20 engineer-weeks of brittle custom wiring |
+| **Decision speed** | Can decide in one meeting — no procurement committee |
+| **Success metric** | ROI visible in the first week |
+
+### Their Day
+
+<Steps>
+1. Morning standup — growth lead reports on yesterday's referral numbers, manually pulled from ReferralHero and cross-referenced with Stripe.
+2. Mid-morning — checks GetWaitlist dashboard for new sign-ups, exports CSV, uploads to Mailchimp for the weekly update email.
+3. Lunch — realizes an NPS detractor from last week's Typeform survey was sent a "refer a friend" email this morning. Damage control on Slack.
+4. Afternoon — asks the one dev to fix the Zapier webhook that broke between Customer.io and the referral tool. Dev estimates 2 days.
+5. End of day — manually reconciles contact lists across 4 tools in Google Sheets. Finds 15% duplicate records and 8% missing emails.
+</Steps>
+
+### Why They Buy GrowthOS
+
+- **Immediate pain relief**: replaces 6-10 tools with one platform in under 30 minutes
+- **Budget recovery**: $49/mo vs $200-$800/mo — saves $1,800-$9,000/yr in direct tool spend
+- **Engineering time back**: eliminates 10-20 weeks of integration work
+- **Data clarity**: one contact graph means no more duplicate records or missing attribution
+- **Self-serve**: no sales call needed, no procurement process, no implementation consultant
+
+<Aside type="tip">
+This persona is the **ideal early adopter** for product-led growth. They can sign up, integrate, and see value in a single afternoon. Their word-of-mouth in indie SaaS communities (IndieHackers, Twitter/X, Product Hunt) drives organic acquisition.
+</Aside>
+
+---
+
+## Secondary Persona: Growth Manager at Mid-Market SaaS <Badge text="Vitamin" variant="caution" />
+
+This persona represents the **upsell path** — they discover GrowthOS through the Launch tier and grow into the Scale tier ($149/mo) as their needs mature.
+
+| Attribute | Detail |
+|---|---|
+| **Company size** | 50-200 employees |
+| **Role** | Head of Growth or Growth Manager with a dedicated team |
+| **Team size** | 3-5 person growth team |
+| **Current tool spend** | $800 - $2,000/mo ($9,600 - $24,000/yr) |
+| **Key need** | Visual journey builder, advanced analytics, team collaboration |
+| **GrowthOS tier** | Scale ($149/mo) |
+| **Decision process** | 1-2 week evaluation, needs buy-in from VP Engineering |
+
+### What They Need Beyond Launch Tier
+
+| Capability | Launch Tier | Scale Tier |
+|---|---|---|
+| Contacts | Up to 5,000 | Up to 50,000 |
+| Journey builder | Basic automation rules | Visual drag-and-drop builder |
+| Analytics | Standard dashboards | Custom funnels + cohort analysis |
+| Team seats | 2 | 10 |
+| Support | Community + email | Priority email + onboarding call |
+| API rate limits | Standard | 5x higher |
+
+### Why They Upgrade
+
+- **Visual journey builder** lets non-technical growth managers design complex workflows without engineering support
+- **Advanced analytics** provide the cohort analysis and funnel visualization that justify budget to leadership
+- **Team collaboration** supports the 3-5 person growth team with role-based access and shared dashboards
+- **Higher limits** accommodate the 10K-50K contact range typical of post-PMF SaaS companies
+
+---
+
+## Tertiary Persona: India-Focused Fintech / E-Commerce <Badge text="Platform" variant="note" />
+
+This persona is a **Phase 3 expansion target** — unlocked when GrowthOS adds WhatsApp Business API support and India-first payment integrations.
+
+| Attribute | Detail |
+|---|---|
+| **Company size** | 20-500 employees |
+| **Region** | India-first, expanding to Southeast Asia |
+| **Primary channel** | WhatsApp (90%+ open rate vs 18% for email) |
+| **Key need** | WhatsApp lifecycle messaging, UPI payment triggers, regional compliance |
+| **GrowthOS opportunity** | WhatsApp module (Phase 3) + India payment integrations |
+| **Market context** | India has 500M+ WhatsApp users; it is the default business communication channel |
+
+### Why WhatsApp Matters
+
+<Tabs>
+  <TabItem label="Email (Western Default)">
+    | Metric | Typical Performance |
+    |---|---|
+    | Open rate | 15-25% |
+    | Click rate | 2-5% |
+    | Response time | Hours to days |
+    | Reach in India | ~30% of target audience |
+  </TabItem>
+  <TabItem label="WhatsApp (India Default)">
+    | Metric | Typical Performance |
+    |---|---|
+    | Open rate | **90%+** |
+    | Click rate | **15-25%** |
+    | Response time | **Minutes** |
+    | Reach in India | **95%+ of target audience** |
+  </TabItem>
+</Tabs>
+
+For Indian fintech and e-commerce companies, email-only growth tools are fundamentally inadequate. WhatsApp is not a nice-to-have — it is the **primary channel**. GrowthOS Phase 3 addresses this by integrating WhatsApp Business API as a first-class channel alongside email, with the same unified contact graph and automation engine.
+
+---
+
+## Who GrowthOS Is NOT For
+
+Knowing who you do **not** serve is as important as knowing who you do. GrowthOS deliberately excludes three segments.
+
+<CardGrid>
+  <Card title="Enterprise 500+ Employees" icon="warning">
+    Companies with 500+ employees typically need enterprise-grade tools like **Braze**, **Iterable**, or **HubSpot Enterprise**. They have dedicated growth engineering teams, established vendor relationships, and procurement processes that favor established enterprise vendors. GrowthOS does not compete here — and does not need to.
+  </Card>
+  <Card title="Consumer Apps (B2C)" icon="close">
+    Consumer applications — social networks, gaming, media — have fundamentally different growth mechanics: viral coefficients, network effects, content loops. GrowthOS is built for **B2B SaaS growth patterns**: trials, onboarding, activation, expansion revenue, and referral programs. The mental models are different.
+  </Card>
+  <Card title="Analytics-Only Teams" icon="close">
+    Teams that need deep product analytics without growth execution should use **PostHog**, **Amplitude**, or **Mixpanel** directly. GrowthOS includes analytics as a supporting capability, not a primary one. If your only need is "understand what users do," you do not need GrowthOS — you need an analytics tool.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+This exclusion is strategic, not a limitation. By focusing on the **growth engineering layer** between analytics and action, GrowthOS avoids competing with well-funded analytics platforms and instead complements them. PostHog tells you what happened. GrowthOS helps you do something about it.
+</Aside>
+
+---
+
+## Success Criteria
+
+How do we know GrowthOS is working for these personas? Four measurable outcomes:
+
+| Criterion | Target | How We Measure |
+|---|---|---|
+| **Integration time** | < 30 minutes | Time from sign-up to first event received |
+| **ROI visibility** | First week | Time to first measurable outcome (email sent, referral tracked, NPS collected) |
+| **Tool replacement** | 3+ tools replaced | Self-reported in onboarding survey + tool-spend reduction |
+| **Engineering burden** | 50%+ reduction | Hours/week spent on growth tool maintenance (pre vs post) |
+
+<Aside type="tip">
+The 30-minute integration bar is non-negotiable. If a growth lead at a 20-person startup cannot go from sign-up to working integration in a single sitting, we have failed. Every architecture decision in GrowthOS flows from this constraint.
+</Aside>
+
+---
+
+## Next Steps
+
+<CardGrid>
+  <LinkCard
+    title="Market Sizing"
+    description="TAM, SAM, and SOM for the unified growth platform market."
+    href="/growthos/vision/market-sizing/"
+  />
+  <LinkCard
+    title="Pricing"
+    description="How GrowthOS pricing maps to these personas: Launch ($49/mo) and Scale ($149/mo)."
+    href="/growthos/business/pricing/"
+  />
+  <LinkCard
+    title="The Tool-Sprawl Problem"
+    description="Deep dive into the pain these personas experience daily."
+    href="/growthos/vision/problem/"
+  />
+  <LinkCard
+    title="Competitive Landscape"
+    description="How GrowthOS positions against alternatives these personas currently use."
+    href="/growthos/business/competitive-landscape/"
+  />
+</CardGrid>

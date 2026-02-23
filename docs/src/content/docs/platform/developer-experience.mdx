@@ -1,0 +1,223 @@
+---
+title: "Developer Experience"
+description: "One SDK, embeddable Web Components, REST APIs — integrate in <30 minutes."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+## SDK Strategy
+
+GrowthOS ships a single JavaScript SDK that powers every embeddable component and handles all client-side communication with the platform. One script tag, three core methods, and you are integrated.
+
+### Core Methods
+
+```javascript
+// Initialize the SDK with your tenant credentials
+GrowthOS.init({
+  tenantId: 't_acme_inc',
+  apiKey: 'gos_live_abc123...'
+});
+
+// Identify the current user (call on login / signup)
+GrowthOS.identify({
+  email: 'jane@acme.com',
+  name: 'Jane Doe',
+  userId: 'usr_12345'
+});
+
+// Track custom events
+GrowthOS.track('feature.activated', {
+  feature: 'dashboard-v2',
+  plan: 'pro',
+  trialDay: 3
+});
+```
+
+<Aside type="tip">
+`identify()` automatically merges anonymous activity with the known contact profile. If a user interacted with a waitlist widget before signing up, their full history is preserved in a single contact record.
+</Aside>
+
+---
+
+## Web Components
+
+GrowthOS ships **framework-agnostic Web Components** that work in any frontend stack — React, Vue, Svelte, plain HTML, or anything that renders to the DOM.
+
+<CardGrid>
+  <Card title="<growthOS-referral>" icon="rocket">
+    Referral widget with shareable link, social share buttons, and real-time reward status. Drop it into any page to turn users into advocates.
+  </Card>
+  <Card title="<growthOS-waitlist>" icon="list-format">
+    Signup form with live position display and share-to-move-up CTA. Drives viral growth before your product even launches.
+  </Card>
+  <Card title="<growthOS-survey>" icon="star">
+    Contextual 1-3 question micro-surveys. Trigger on events, display inline or as modals, and feed responses directly into segments and workflows.
+  </Card>
+</CardGrid>
+
+### Usage Example
+
+```html
+<!-- Referral widget -->
+<growthOS-referral
+  campaign="launch-2026"
+  theme="dark"
+  show-leaderboard="true">
+</growthOS-referral>
+
+<!-- Waitlist signup -->
+<growthOS-waitlist
+  waitlist-id="beta-access"
+  show-position="true"
+  share-incentive="move-up-10">
+</growthOS-waitlist>
+
+<!-- Micro-survey -->
+<growthOS-survey
+  survey-id="onboarding-nps"
+  trigger="manual"
+  position="bottom-right">
+</growthOS-survey>
+```
+
+### Component Properties
+
+All Web Components share these characteristics:
+
+| Property | Detail |
+|---|---|
+| **Style isolation** | Shadow DOM — no CSS conflicts with your app |
+| **Bundle size** | < 50KB gzipped per component |
+| **Loading** | Lazy-loaded — only fetched when the element is in the DOM |
+| **Hosting** | CDN-hosted with global edge caching |
+| **Theming** | CSS custom properties for colors, fonts, spacing, and border radius |
+
+---
+
+## REST API
+
+Every operation available in the dashboard is also available through the REST API. All endpoints are scoped by tenant API key passed in the `Authorization` header.
+
+### Contacts
+
+```bash
+# Create a contact
+POST /api/v1/contacts
+Content-Type: application/json
+Authorization: Bearer gos_live_abc123...
+
+{
+  "email": "jane@acme.com",
+  "name": "Jane Doe",
+  "properties": { "plan": "pro", "company": "Acme Inc" }
+}
+
+# Update a contact
+PATCH /api/v1/contacts/:id
+Authorization: Bearer gos_live_abc123...
+
+{
+  "properties": { "plan": "enterprise" }
+}
+
+# Get a contact
+GET /api/v1/contacts/:id
+Authorization: Bearer gos_live_abc123...
+```
+
+### Events
+
+```bash
+# Send an event
+POST /api/v1/events
+Content-Type: application/json
+Authorization: Bearer gos_live_abc123...
+
+{
+  "event": "feature.activated",
+  "contact_id": "c_8f2a3b1d",
+  "properties": {
+    "feature": "dashboard-v2",
+    "plan": "pro"
+  }
+}
+```
+
+<Aside type="note">
+All API responses include standard pagination, rate limit headers, and consistent error formatting. See the full API reference for details on every endpoint.
+</Aside>
+
+---
+
+## Server-Side Events
+
+Not all events originate in the browser. Backend events — billing changes, usage thresholds, account modifications — flow into GrowthOS via authenticated `POST` requests to the events API.
+
+GrowthOS fires **webhooks outbound** for modules that need to notify external systems:
+
+```json
+{
+  "webhook": "referral.reward.issued",
+  "contact_id": "c_8f2a3b1d",
+  "tenant_id": "t_acme_inc",
+  "data": {
+    "reward_type": "credit",
+    "reward_amount": 20,
+    "campaign_id": "camp_launch_2026"
+  },
+  "timestamp": "2026-02-23T14:32:00Z"
+}
+```
+
+Webhooks are signed with HMAC-SHA256, include retry logic with exponential backoff, and can be configured per-tenant in the dashboard.
+
+---
+
+## Integration Timeline
+
+From zero to fully integrated in under 30 minutes.
+
+<Steps>
+1. **Add the SDK script tag** — one line in your HTML `<head>` or a single npm install
+
+   ```html
+   <script src="https://cdn.growthos.dev/sdk/v1/growthos.min.js"></script>
+   ```
+
+2. **Call `init()` with your API key** — authenticates the SDK and establishes the tenant context
+
+   ```javascript
+   GrowthOS.init({ tenantId: 't_acme_inc', apiKey: 'gos_live_abc123...' });
+   ```
+
+3. **Call `identify()` on login** — links the browser session to a contact in the graph
+
+   ```javascript
+   GrowthOS.identify({ email: user.email, name: user.name, userId: user.id });
+   ```
+
+4. **Drop Web Components where needed** — add referral widgets, waitlist forms, or surveys to any page
+
+   ```html
+   <growthOS-referral campaign="launch-2026"></growthOS-referral>
+   ```
+
+5. **Configure sequences in the dashboard** — set up email sequences, segments, and automation rules in the GrowthOS admin panel
+</Steps>
+
+<Aside type="tip">
+Steps 1-4 are code changes that a developer can ship in a single PR. Step 5 is configuration that a growth or marketing team member can handle without engineering support.
+</Aside>
+
+<CardGrid>
+  <LinkCard
+    title="Platform Architecture"
+    description="Understand the event bus, database, and infrastructure behind the SDK."
+    href="/growthos/platform/architecture/"
+  />
+  <LinkCard
+    title="PostHog Integration"
+    description="How GrowthOS leverages PostHog for analytics, feature flags, and experiments."
+    href="/growthos/platform/posthog-integration/"
+  />
+</CardGrid>

@@ -1,0 +1,149 @@
+---
+title: "P2-13: Employee Social Amplification with Tracking"
+description: "Empower employees to share pre-approved content on social media — track reach and conversions."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+**Empower employees to share pre-approved content on social media — track reach and conversions.**
+
+---
+
+## Scoring Card
+
+| Dimension | Score | Rationale |
+|-----------|:-----:|-----------|
+| **Pain** | 3 / 5 | GaggleAMP costs $500-2K/mo. Most teams have no tracking at all. |
+| **Revenue** | 4 / 5 | Employee shares are the highest-trust acquisition channel |
+| **Build** | 3 / 5 | Content queue + Slack bot + UTM links + conversion tracking |
+| **Moat** | 4 / 5 | Unique in the PLG space — no competitor offers this natively |
+| **Total** | **14 / 20** | |
+
+---
+
+## Classification
+
+<Badge text="Vitamin" variant="caution" />
+
+<Aside type="caution" title="Advocate — High-Moat Differentiator">
+Employee Amplification has the highest moat score in P2 (4/5). While not a burning pain, it is a unique differentiator that no PLG-focused growth tool offers natively. Competitors focus on customer advocacy; GrowthOS adds employee advocacy.
+</Aside>
+
+---
+
+## The Pain It Kills
+
+Employee advocacy is one of the most under-utilized growth channels:
+
+1. **GaggleAMP costs $500-2K/mo** — enterprise pricing for what is essentially "put content in front of employees and track shares." Inaccessible for startups and mid-market.
+2. **No tracking** — most companies post content in a Slack channel and ask people to share. Zero visibility into who shared, how many impressions, or which shares drove signups.
+3. **Friction kills participation** — employees need to copy text, open LinkedIn, paste, add their own commentary, and post. Most don't bother.
+4. **No conversion attribution** — even companies that track shares can't connect an employee's LinkedIn post to a signup to a conversion.
+
+**Real scenarios:**
+- A SaaS startup launches a new feature. The CEO posts in #general: "Please share this on LinkedIn!" Three people do. Nobody knows if it drove any signups.
+- A dev tools company has 50 employees who collectively have 100K+ LinkedIn connections. This distribution channel is completely untapped because there is no easy way to share or track.
+- A growth lead wants to know: "Did the employee shares for our Product Hunt launch drive more signups than the paid LinkedIn ads?" Impossible to answer.
+
+---
+
+## What It Does
+
+Employee Amplification creates a frictionless loop: content goes in, tracked shares come out.
+
+- **Content queue** — growth team adds pre-approved content to a queue in the GrowthOS dashboard. Each item includes suggested post text for LinkedIn and Twitter.
+- **Slack bot distribution** — a Slack bot notifies employees of new shareable content. One-click to copy a pre-formatted post.
+- **UTM-tagged links per employee** — every share link includes a unique UTM tag for the sharing employee (e.g., `utm_source=employee&utm_medium=linkedin&utm_campaign=feature_launch&utm_content=jane_doe`).
+- **Conversion tracking** — when a visitor arrives via an employee share link, UTM Attribution tracks them through signup → activation → revenue.
+- **Performance dashboard** — see which employees drive the most reach and conversions.
+
+---
+
+## Competition & What We Replace
+
+| Tool | Price | Limitation |
+|------|-------|------------|
+| **GaggleAMP** | $500-2K/mo | Enterprise pricing. No PLG integration. |
+| **Bambu by Sprout Social** | Enterprise | Part of a social media management suite. Overkill. |
+| **EveryoneSocial** | Enterprise | Standalone tool. No lifecycle data connection. |
+| **Manual Slack posts** | Free | Zero tracking. High friction. Low participation. |
+| **GrowthOS Employee Amplification** | **Included** | **Slack bot + UTM tracking + conversion attribution** |
+
+---
+
+## Moat & Defensibility
+
+This feature has the **highest moat score in P2** (4/5) because:
+
+- No PLG-focused growth tool offers employee amplification natively.
+- The feature creates a unique data asset: employee → share → signup → activation → revenue attribution.
+- Enterprise alternatives (GaggleAMP, Bambu) are priced for 500+ employee companies. GrowthOS brings this to 10-200 employee startups.
+- The Slack bot creates daily engagement with GrowthOS among employees who are not direct users — increasing org-wide awareness and stickiness.
+
+---
+
+## Interoperability Advantage
+
+```mermaid
+graph LR
+    CQ[Content Queue] -->|new content| SB[Slack Bot]
+    SB -->|pre-formatted post| EMP[Employee]
+    EMP -->|share with UTM link| SM[Social Media]
+    SM -->|visitor clicks| UTM[UTM Attribution]
+    UTM -->|source=employee_share| CG[Contact Graph]
+    CG -->|employee channel ROI| AN[Analytics]
+```
+
+Employee Amplification leverages UTM Attribution to connect the dots from employee share to signup to revenue.
+
+---
+
+## What Ships
+
+<Steps>
+1. **Content queue dashboard** — add, edit, schedule shareable content with suggested post text
+2. **Slack bot distribution** — notify employees of new content with one-click copy
+3. **Pre-formatted posts** — suggested text for LinkedIn and Twitter, customizable per platform
+4. **UTM-tagged links per employee** — unique tracking links for attribution
+5. **Share tracking** — see which employees shared, when, and on which platform
+6. **Conversion attribution** — connect employee shares to signups and revenue via UTM Attribution
+</Steps>
+
+---
+
+## What Does NOT Ship
+
+- **AI content generation** — no AI-generated suggested post text. Planned for P4.
+- **Gamification / leaderboards** — no point systems or competitive rankings for employee sharing. Keep it simple.
+- **Compliance workflows** — no approval chains or legal review before sharing. Content is pre-approved by the growth team in the queue.
+- **Direct social media posting** — employees copy and paste. No OAuth-based posting to LinkedIn/Twitter on behalf of employees.
+
+---
+
+## Build vs Buy
+
+<Tabs>
+  <TabItem label="Build (chosen)">
+    - Content queue is a simple CRUD interface
+    - Slack bot is moderate effort (~1 week)
+    - UTM link generation leverages existing UTM Attribution infrastructure
+    - Main value is in the attribution pipeline, which is already built
+    - Estimated: **2.5 weeks**
+  </TabItem>
+  <TabItem label="Buy">
+    - GaggleAMP/Bambu are enterprise-priced ($500-2K/mo) — cost-prohibitive to embed
+    - No off-the-shelf tool integrates with the GrowthOS UTM + Contact Graph pipeline
+    - Building is significantly cheaper and provides a unique differentiator
+  </TabItem>
+</Tabs>
+
+---
+
+## Dependencies
+
+| Dependency | Phase | Status | Notes |
+|------------|-------|--------|-------|
+| Slack integration | External | Required | Slack bot for content distribution to employees |
+| [UTM Attribution](/growthos/phase-2/utm-attribution/) | P2 | Required | Per-employee link tracking and conversion attribution |
+| [Contact Graph](/growthos/phase-1/unified-contact-graph/) | P1 | Required | Store source=employee_share on contact records |
+| [Analytics](/growthos/platform/posthog-integration/) | P1 | Optional | Employee channel ROI reporting |

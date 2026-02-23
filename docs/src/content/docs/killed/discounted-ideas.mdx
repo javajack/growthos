@@ -1,0 +1,106 @@
+---
+title: "Discounted Ideas"
+description: "13 features we deliberately killed — and why. Honest assessment of what we won't build."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+Killing features is as important as building them. These 13 ideas scored ≤10/20 in our triage framework or were better served by existing tools + webhook integrations. Every "no" here made the "yes" list stronger.
+
+<Aside type="tip" title="The Webhook Principle">
+If a feature can be adequately served by a webhook integration with an existing best-in-class tool, we don't build it. We build the webhook and the growth logic that sits on top.
+</Aside>
+
+---
+
+## The Kill List
+
+| # | Feature | Score | Killed Reason |
+|---|---------|:-----:|---------------|
+| K-37 | Paywalled Feature Gates / Trial Management | 10 | Better handled by Stripe + PostHog. Too high-risk inserting into billing/access control. |
+| K-38 | Pricing Page Experiments | 7 | PostHog's experiments already superior. Zero reason to rebuild. |
+| K-39 | Community Hub (Self-Hosted) | 6 | Discourse is free, mature (200K+ deployments). We'd build a worse version. Webhook instead. |
+| K-40 | Contact Sync & Discovery | 9 | B2B SaaS doesn't need contact book sync. Privacy/GDPR/DPDPA complexity too high. |
+| K-41 | Interactive Product Tours | 8 | Appcues ($249/mo) territory. 8+ weeks for mediocre version. In-App Nudges covers 80% at 20% effort. |
+| K-42 | Changelog / What's New | 9 | LaunchNotes, Beamer handle this. Changelog = content, not growth engine. |
+| K-43 | Gamification (Streaks, Badges, Rewards) | 8 | Vitamin for consumer (CRED at 10M+ users), distraction for SaaS (500–5K users). |
+| K-44 | Event / Webinar Engine | 8 | Luma, Zoom, Eventbrite own this. Webhook integration to Luma instead. |
+| K-45 | Missed-Call-to-WhatsApp Trigger | 10 | India-specific (Exotel + Gupshup). P1–P2 customer is indie SaaS, not fintech. Webhook enables it. |
+| K-46 | QR Code Engine | 9 | QR codes are free (goqr.me). Zero moat. |
+| K-47 | Link-in-Bio Page | 8 | Linktree ($5/mo), 40M+ users. No pain, no moat, no revenue. |
+| K-48 | Contest / Giveaway Engine | 8 | KickoffLabs ($79/mo), Gleam ($49/mo) do this. Ephemeral, not recurring infrastructure. |
+| K-49 | Magic Link / Passwordless Auth | 8 | Auth is tenant's responsibility. Clerk, Auth0, Firebase own this. GrowthOS = growth, not identity. |
+
+---
+
+## Detailed Rationale
+
+### K-37: Paywalled Feature Gates / Trial Management
+
+Feature gating — controlling which features a user can access based on their plan — sits squarely in the billing/authorization layer. Stripe already handles plan-based entitlements, and PostHog feature flags handle conditional access with real-time evaluation. Inserting GrowthOS into the authentication/authorization layer creates a single point of failure for the tenant's entire product. The risk/reward ratio is unacceptable.
+
+### K-38: Pricing Page Experiments
+
+PostHog's experimentation engine is purpose-built for A/B testing with statistical significance, feature flags, and conversion tracking. Rebuilding pricing page experiments means competing head-to-head with a well-funded open-source tool that already does this better than we could in 6 months of dedicated work. The smart play is to integrate with PostHog for experimentation and focus GrowthOS on the growth logic layer.
+
+### K-39: Community Hub (Self-Hosted)
+
+Discourse has 200K+ deployments, a mature plugin ecosystem, SSO support, and years of moderation tooling. Building a community platform from scratch would take 12+ weeks and produce an inferior product. The right approach is a webhook integration: community events (new post, reply, badge earned) flow into the GrowthOS Contact Graph, enabling growth logic on top of community activity without rebuilding the community itself.
+
+### K-40: Contact Sync & Discovery
+
+Contact book sync (importing contacts from Gmail, phone contacts, LinkedIn) is a B2C and social networking pattern, not a B2B SaaS growth pattern. The privacy implications are severe — GDPR, CCPA, and India's DPDPA all have strict rules about processing third-party contact data without explicit consent. The engineering effort for OAuth flows, incremental sync, and compliance is 6–8 weeks for a feature that serves the wrong customer.
+
+### K-41: Interactive Product Tours
+
+Appcues, Userflow, and Pendo have spent years perfecting step-by-step product tours with targeting, branching, and analytics. Building a competitive tour engine would take 8+ weeks and still lag behind. Meanwhile, [In-App Nudges (P2-14)](/growthos/phase-2/in-app-nudges/) covers 80% of the use case — contextual tooltips, announcements, and CTAs — at 20% of the engineering cost. The remaining 20% is adequately served by Appcues via webhook.
+
+### K-42: Changelog / What's New
+
+Changelogs are content, not growth infrastructure. LaunchNotes and Beamer provide hosted changelog pages, in-app widgets, and email digests. The growth value of a changelog (user awareness of new features) is better served by [In-App Nudges](/growthos/phase-2/in-app-nudges/) announcing specific features to specific segments — targeted nudges outperform broadcast changelogs.
+
+### K-43: Gamification (Streaks, Badges, Rewards)
+
+Gamification drives engagement for consumer apps with millions of users — CRED, Duolingo, Headspace. For B2B SaaS with 500–5,000 users, gamification is a distraction that adds UI complexity without meaningful retention impact. The engineering effort (streak tracking, badge logic, reward fulfillment, leaderboards) is 6+ weeks for a vitamin that serves the wrong audience.
+
+### K-44: Event / Webinar Engine
+
+Luma, Zoom Webinars, and Eventbrite are purpose-built event platforms with registration, reminders, recording, and attendee management. Rebuilding this is 10+ weeks of work for an inferior product. The right approach: webhook integration to Luma sends event registration and attendance data into the Contact Graph, enabling post-event growth sequences without rebuilding the event engine.
+
+### K-45: Missed-Call-to-WhatsApp Trigger
+
+This is a powerful pattern in India's fintech and D2C ecosystem — a missed call triggers a WhatsApp message via Exotel + Gupshup. But GrowthOS's Phase 1–2 customer is indie SaaS, not fintech. The telephony integration (Exotel, Twilio) adds complexity for a narrow audience. A webhook from GrowthOS to Exotel enables this pattern for the tenants who need it, without polluting the core product.
+
+### K-46: QR Code Engine
+
+QR code generation is a solved, commoditized problem. goqr.me, QR Code Generator, and dozens of free tools generate QR codes instantly. There is zero moat in wrapping a QR library, zero pain in the current workflow, and zero recurring value. A QR code is generated once and used — it is not growth infrastructure.
+
+### K-47: Link-in-Bio Page
+
+Linktree has 40M+ users and charges $5/mo. The market is saturated, the moat is zero (it is a styled list of links), and the pain is nonexistent. Building a link-in-bio feature would take 2–3 weeks for something that adds zero differentiation to GrowthOS.
+
+### K-48: Contest / Giveaway Engine
+
+Contests and giveaways are ephemeral campaigns, not recurring growth infrastructure. KickoffLabs ($79/mo) and Gleam ($49/mo) provide contest landing pages, entry mechanics, and winner selection. The value is short-lived — a contest runs for 2 weeks and ends. GrowthOS focuses on modules that provide **recurring, compounding value**, not one-time campaign tools.
+
+### K-49: Magic Link / Passwordless Auth
+
+Authentication is the tenant's responsibility, not GrowthOS's. Clerk, Auth0, Supabase Auth, and Firebase Authentication are mature, secure, and battle-tested. Inserting GrowthOS into the auth flow creates security liability and distracts from the growth mission. GrowthOS is a growth platform, not an identity platform.
+
+---
+
+## The Common Thread
+
+Four patterns explain why every feature on this list was killed:
+
+1. **Excellent existing solutions** — Discourse, PostHog, Appcues, Clerk, Luma. When a best-in-class tool exists and is affordable, we integrate rather than rebuild.
+
+2. **Weak connection to the Contact Graph** — features that don't meaningfully enrich the contact record or benefit from it (QR codes, link-in-bio, changelogs) don't belong in a growth platform built around unified contact data.
+
+3. **One-time/ephemeral value, not recurring infrastructure** — contests, giveaways, and QR codes are single-use. GrowthOS modules must provide compounding value over time.
+
+4. **Better served by webhook integration** — when the growth logic sits in GrowthOS but the execution belongs to a specialized tool, a webhook is the right boundary. We build the webhook, not the tool.
+
+<Aside type="note" title="Webhook is Not a Cop-Out">
+The [Webhook Engine (P2-12)](/growthos/phase-2/webhook-engine/) is a first-class module. Every killed feature on this list can be partially or fully enabled through a webhook integration — sending data to and from specialized tools while keeping the growth intelligence inside GrowthOS.
+</Aside>

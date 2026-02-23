@@ -1,0 +1,110 @@
+---
+title: "Unit Economics"
+description: "Margins, CAC, LTV, and the path to sustainable growth."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+## Key Metrics
+
+| Metric | Target |
+|---|---|
+| **Marginal cost per customer** | $3-8/mo (email delivery + infra) |
+| **Gross margin** | 85%+ |
+| **CAC payback** | Under 3 months (PLG: free to paid) |
+| **Annual churn** | Under 5% (contact graph + sequences = high switching cost) |
+| **ARPU** | $49–149/mo |
+| **LTV (3yr)** | $1,764–5,364 (at under 5% annual churn) |
+| **LTV:CAC ratio** | Above 5:1 target |
+
+---
+
+## Revenue Milestones
+
+| Phase | Timeline | Customers | MRR Target |
+|---|---|---|---|
+| **Phase 1** | Months 1-4 | 30+ | Validation |
+| **Phase 2** | Months 5-9 | 100+ | $20K-50K |
+| **Phase 3** | Months 10-15 | 200+ | $80K-200K |
+| **Phase 4** | Months 16-20 | 300+ | $200K+ |
+
+---
+
+## Why Margins Are High
+
+GrowthOS is a pure SaaS platform with minimal marginal cost per customer:
+
+- **Multi-tenant shared infrastructure** — compute, storage, and event processing are shared across all tenants. Adding one more customer costs near-zero until you hit a scaling threshold.
+- **Email delivery via SES** — Amazon SES costs $0.10 per 1,000 emails. A Growth-tier customer sending 10K emails/mo costs $1 in delivery.
+- **No per-seat licensing** — GrowthOS charges by contacts, not seats. Infrastructure cost scales with data volume, not team size.
+- **No physical goods or services** — no fulfillment, no professional services, no hardware.
+
+The result: **85%+ gross margins** at scale, with marginal cost per customer between $3-8/mo depending on email volume and event throughput.
+
+<Aside type="note">
+At 85% gross margin and $49-149/mo ARPU, GrowthOS operates in the same margin band as best-in-class SaaS companies — but at a price point accessible to indie and small teams.
+</Aside>
+
+---
+
+## Why Churn Is Low
+
+The unified contact graph creates **organic switching cost** — not through vendor lock-in, but through accumulated integrated value:
+
+- **Enriched contact records** — every module enriches the same contact profile. A single record might include waitlist position, referral history, email engagement, NPS score, and survey responses.
+- **Cross-module event history** — a contact's full journey (signed up via referral, completed onboarding sequence, submitted NPS 9, referred 3 others) lives in one graph.
+- **Migration pain** — moving 50K+ enriched records with cross-module event history to a collection of point solutions means rebuilding identity resolution, re-wiring integrations, and losing compound context.
+
+The deeper a team uses GrowthOS, the more painful it becomes to leave — not because of artificial barriers, but because the integrated data is genuinely more valuable than the sum of its parts.
+
+---
+
+## Growth Flywheel
+
+```mermaid
+graph LR
+    A[Free Tier] -->|Adoption| B[Module Usage]
+    B -->|Value Discovery| C[Upgrade to Growth/Scale]
+    C -->|More Modules Activated| D[Deeper Contact Graph]
+    D -->|Cross-Module Data| E[Organic Switching Cost]
+    E -->|Retention| F[Low Churn]
+    F -->|Compounding Revenue| G[High LTV]
+    G -->|Reinvest in Product| A
+```
+
+<Steps>
+
+1. **Free tier drives adoption**
+
+   Indie builders and small teams start with 500 contacts, a waitlist, and SDK access. Zero risk, zero commitment.
+
+2. **Module expansion within tenant**
+
+   As teams grow, they activate referrals, lifecycle emails, surveys, and advocacy. Each module adds data to the contact graph and increases the platform's value.
+
+3. **Organic switching cost accumulates**
+
+   The unified contact graph — with enriched profiles, cross-module events, and behavioral history — becomes the team's growth operating system. Replacing it means fragmenting identity across 5+ tools.
+
+4. **Low churn drives high LTV**
+
+   At under 5% annual churn and $49–149/mo ARPU, 3-year LTV reaches $1,764–5,364 per customer. With CAC payback under 3 months, the unit economics compound rapidly.
+
+</Steps>
+
+---
+
+## Explore Further
+
+<CardGrid>
+  <LinkCard
+    title="Pricing"
+    description="Tiered pricing designed for indie and small SaaS teams."
+    href="/growthos/business/pricing/"
+  />
+  <LinkCard
+    title="Competitive Landscape"
+    description="How GrowthOS compares to engagement platforms, analytics tools, and point solutions."
+    href="/growthos/business/competitive-landscape/"
+  />
+</CardGrid>

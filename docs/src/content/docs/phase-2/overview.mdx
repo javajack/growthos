@@ -1,0 +1,87 @@
+---
+title: "Phase 2 — Platform Maturity"
+description: "Months 5-9: Deepen platform, expand modules, land mid-market, reach $20K-$50K MRR."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+GrowthOS Phase 2 deepens the platform, expands the module catalog, and positions the product for mid-market SaaS companies (50-200 employees). The goal is to move from early-adopter traction to repeatable, scalable growth.
+
+---
+
+## Timeline & Team
+
+| Parameter | Detail |
+|-----------|--------|
+| **Timeline** | Months 5-9 |
+| **Team** | 4-7 engineers + 1 designer |
+| **Total Engineering** | ~29.5 weeks |
+
+---
+
+## Entry Trigger
+
+<Aside type="caution" title="Phase 2 begins when ALL conditions are met">
+- ≥ 30 paying customers
+- ≥ 3 modules active per tenant (average)
+- NPS ≥ 40
+</Aside>
+
+---
+
+## Goal
+
+Expand into mid-market SaaS (50-200 employees) and reach **$20K-$50K MRR** by delivering platform-level primitives (segments, scoring, webhooks) that make every module smarter and more connected.
+
+---
+
+## Feature Summary
+
+| # | Feature | Pain | Revenue | Build | Moat | Total | Category |
+|---|---------|:----:|:-------:|:-----:|:----:|:-----:|----------|
+| P2-06 | Segment Builder (Rule-Based) | 4 | 3 | 4 | 3 | **14** | <Badge text="Platform" variant="note" /> |
+| P2-07 | Gated Content / Lead Capture | 4 | 4 | 3 | 3 | **14** | Acquire |
+| P2-08 | Lightweight Onboarding Checklist | 3 | 3 | 4 | 3 | **13** | Activate |
+| P2-09 | UTM Ingestion + Attribution | 4 | 3 | 4 | 3 | **14** | <Badge text="Platform" variant="note" /> |
+| P2-10 | Broadcast / Newsletter Emails | 4 | 4 | 3 | 3 | **14** | Engage |
+| P2-11 | Coupon / Promo Engine | 4 | 5 | 3 | 2 | **14** | Monetise |
+| P2-12 | Webhook Engine (In + Out) | 3 | 3 | 4 | 3 | **13** | <Badge text="Platform" variant="note" /> |
+| P2-13 | Employee Social Amplification | 3 | 4 | 3 | 4 | **14** | Advocate |
+| P2-14 | In-App Nudges | 3 | 3 | 4 | 3 | **13** | Engage |
+| P2-15 | Review Prompt Orchestration | 3 | 4 | 4 | 3 | **14** | Advocate |
+| P2-16 | Tiered Referral Rewards | 4 | 5 | 4 | 3 | **16** | Advocate |
+| P2-17 | Personalised Welcome Sequences | 3 | 3 | 4 | 3 | **13** | Activate |
+| P2-18 | Unified Contact Scoring | 3 | 3 | 4 | 3 | **13** | <Badge text="Platform" variant="note" /> |
+| P2-31 | Stripe Integration (Billing Sync) | 4 | 4 | 3 | 3 | **14** | <Badge text="Foundation" variant="note" /> |
+
+---
+
+## Success Metrics
+
+| Metric | Target |
+|--------|--------|
+| Paying customers | 100+ |
+| MRR | $20K-$50K |
+| Modules per top-quartile tenant | 4-5 |
+| Net revenue retention | > 120% |
+
+---
+
+## Feature Map
+
+<CardGrid>
+  <LinkCard title="P2-06: Segment Builder" href="/growthos/phase-2/segment-builder/" description="Dynamic audience segments based on contact properties, events, and scores." />
+  <LinkCard title="P2-07: Gated Content / Lead Capture" href="/growthos/phase-2/gated-content/" description="Gate any content behind an email capture form." />
+  <LinkCard title="P2-08: Onboarding Checklist" href="/growthos/phase-2/onboarding-checklist/" description="In-app checklist widget for key activation steps." />
+  <LinkCard title="P2-09: UTM Attribution" href="/growthos/phase-2/utm-attribution/" description="Capture UTM params and see which channels drive conversions." />
+  <LinkCard title="P2-10: Broadcast Emails" href="/growthos/phase-2/broadcast-emails/" description="One-time email broadcasts to segments." />
+  <LinkCard title="P2-11: Coupon / Promo Engine" href="/growthos/phase-2/coupon-engine/" description="Generate, distribute, and track discount codes." />
+  <LinkCard title="P2-12: Webhook Engine" href="/growthos/phase-2/webhook-engine/" description="Send and receive webhooks to connect external tools." />
+  <LinkCard title="P2-13: Employee Amplification" href="/growthos/phase-2/employee-amplification/" description="Empower employees to share content with tracking." />
+  <LinkCard title="P2-14: In-App Nudges" href="/growthos/phase-2/in-app-nudges/" description="Targeted banners, modals, and tooltips inside the user's app." />
+  <LinkCard title="P2-15: Review Prompts" href="/growthos/phase-2/review-prompts/" description="Prompt happy users to leave reviews at the right moment." />
+  <LinkCard title="P2-16: Tiered Referral Rewards" href="/growthos/phase-2/tiered-referrals/" description="Graduated reward tiers for top referrers." />
+  <LinkCard title="P2-17: Welcome Sequences" href="/growthos/phase-2/welcome-sequences/" description="Branching welcome emails based on persona and behavior." />
+  <LinkCard title="P2-18: Contact Scoring" href="/growthos/phase-2/contact-scoring/" description="Automatically score contacts on engagement and behavior." />
+  <LinkCard title="P2-31: Stripe Integration" href="/growthos/phase-2/stripe-integration/" description="Sync Stripe billing events into the contact graph." />
+</CardGrid>
