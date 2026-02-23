@@ -256,6 +256,7 @@ export default defineConfig({
 				{
 					label: 'Roadmap',
 					items: [
+						{ label: 'Growth Loop Map', slug: 'roadmap/growth-loop' },
 						{ label: 'Master Scorecard', slug: 'roadmap/master-scorecard' },
 						{ label: 'Anti-Patterns', slug: 'roadmap/anti-patterns' },
 					],
