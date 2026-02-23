@@ -1,0 +1,190 @@
+---
+title: "Event Catalog — Domain Event Dictionary"
+description: "Comprehensive event taxonomy for 12 business domains. Copy-paste event schemas for SaaS, e-commerce, fintech, healthcare, and more."
+---
+
+import { Card, CardGrid, Badge, Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+## Purpose
+
+This catalog provides **ready-to-use event definitions** for the most common business verticals. Each domain page includes event names, properties, lifecycle stage mapping, and volume classification.
+
+Use this as your primary reference when instrumenting your product with GrowthOS. Instead of inventing event names from scratch, find your domain below, copy the schemas that apply, and customize the properties to match your data model.
+
+<Aside type="tip">
+Every event in this catalog follows the canonical structure defined in the [Event Schema](/growthos/api/events/) page. The catalog builds on that foundation with domain-specific naming and property recommendations.
+</Aside>
+
+---
+
+## How to Use This Catalog
+
+<Steps>
+1. **Find your domain** (or the closest match) in the directory below.
+
+2. **Start with Cross-Domain Universal events** — these are required for every GrowthOS installation regardless of vertical.
+
+3. **Add domain-specific events** from your vertical's page. Each page organizes events by growth loop stage (Acquire, Activate, Engage, Monetise, Advocate).
+
+4. **Customize properties** — the schemas here are a starting template. Add properties that matter to your business and remove ones that do not apply.
+
+5. **Follow naming conventions** from the [Event Schema](/growthos/api/events/) page to keep your taxonomy clean and automations reliable.
+</Steps>
+
+---
+
+## Naming Conventions
+
+A quick recap of the rules that apply to every event in this catalog.
+
+<CardGrid>
+  <Card title="snake_case everywhere" icon="seti:json">
+    All event names and property keys use `snake_case`. No camelCase, no PascalCase, no kebab-case.
+  </Card>
+  <Card title="object.action pattern" icon="list-format">
+    Domain events follow `object.action` naming — e.g., `order.completed`, `subscription.upgraded`, `feature.activated`.
+  </Card>
+  <Card title="$ prefix = system only" icon="setting">
+    Events starting with `$` (e.g., `$page_view`, `$session_start`) are auto-tracked by the SDK. Never use the `$` prefix for custom events.
+  </Card>
+  <Card title="Custom events = no prefix" icon="pencil">
+    Developer-defined events are free-form within the naming rules. No `$` prefix, no reserved words.
+  </Card>
+</CardGrid>
+
+---
+
+## Volume Classification
+
+Each event in the catalog is tagged with a volume badge indicating expected frequency and recommended processing strategy.
+
+| Badge | Meaning | Processing Guidance |
+|---|---|---|
+| <Badge text="High" variant="caution" /> | Auto-tracked or very frequent user actions | Use batching and sampling; avoid storing raw payloads long-term |
+| <Badge text="Medium" variant="note" /> | Regular user actions | Standard processing pipeline; index key properties |
+| <Badge text="Low" variant="success" /> | Rare events (conversions, lifecycle changes) | Fully processed; store complete payloads; trigger automations |
+| <Badge text="Low (admin)" variant="default" /> | Operational and internal events | Admin dashboards only; not exposed to end-user analytics |
+
+<Aside type="note">
+Volume classifications are guidelines based on typical SaaS and e-commerce traffic patterns. Your actual volumes will depend on product usage. Adjust batching and retention policies accordingly.
+</Aside>
+
+---
+
+## Domain Directory
+
+<CardGrid>
+  <LinkCard
+    title="Cross-Domain Universal"
+    description="Required for all domains — authentication, billing, support, notifications, consent, and lifecycle signals. Start here."
+    href="/growthos/event-catalog/universal/"
+  />
+  <LinkCard
+    title="SaaS / B2B Software"
+    description="Trials, onboarding, feature adoption, team collaboration, API usage, and subscription management."
+    href="/growthos/event-catalog/saas/"
+  />
+  <LinkCard
+    title="E-Commerce / D2C"
+    description="Product discovery, cart management, checkout, order lifecycle, returns, reviews, and loyalty programs."
+    href="/growthos/event-catalog/ecommerce/"
+  />
+  <LinkCard
+    title="Fintech / Banking"
+    description="Account management, transactions, lending, card operations, and compliance events."
+    href="/growthos/event-catalog/fintech/"
+  />
+  <LinkCard
+    title="Insurance / InsurTech"
+    description="Quote generation, policy lifecycle, claims, renewals, and underwriting events."
+    href="/growthos/event-catalog/insurance/"
+  />
+  <LinkCard
+    title="EdTech / Online Learning"
+    description="Course enrollment, lesson progress, assessments, certificates, and instructor events."
+    href="/growthos/event-catalog/edtech/"
+  />
+  <LinkCard
+    title="Healthcare / HealthTech"
+    description="Appointments, consultations, prescriptions, health records, and telehealth events."
+    href="/growthos/event-catalog/healthcare/"
+  />
+  <LinkCard
+    title="Marketplace / Platform"
+    description="Listings, bookings, transactions, ratings, disputes, and seller/buyer lifecycle events."
+    href="/growthos/event-catalog/marketplace/"
+  />
+  <LinkCard
+    title="Media / Streaming"
+    description="Content playback, subscriptions, playlists, recommendations, and ad engagement events."
+    href="/growthos/event-catalog/media/"
+  />
+  <LinkCard
+    title="Real Estate / PropTech"
+    description="Listings, property views, tours, applications, leases, and maintenance events."
+    href="/growthos/event-catalog/real-estate/"
+  />
+  <LinkCard
+    title="HR Tech / Recruitment"
+    description="Job postings, applications, interviews, hiring, onboarding, and employee engagement events."
+    href="/growthos/event-catalog/hr-tech/"
+  />
+  <LinkCard
+    title="Logistics / Supply Chain"
+    description="Shipments, warehouse operations, fleet tracking, delivery, and inventory events."
+    href="/growthos/event-catalog/logistics/"
+  />
+  <LinkCard
+    title="Gaming"
+    description="Player progression, in-app purchases, matchmaking, achievements, and social events."
+    href="/growthos/event-catalog/gaming/"
+  />
+</CardGrid>
+
+---
+
+## Event Count Summary
+
+A quick overview of events per domain and the recommended starting set.
+
+| Domain | Total Events | Recommended Starting Events |
+|---|---|---|
+| Cross-Domain Universal | 44 | All 44 (required baseline) |
+| SaaS / B2B Software | 47 | `onboarding.completed`, `feature.activated`, `subscription.created`, `invite.sent` |
+| E-Commerce / D2C | 46 | `product.viewed`, `product.added_to_cart`, `checkout.started`, `order.completed` |
+| Fintech / Banking | ~40 | `account.created`, `transaction.completed`, `kyc.completed`, `loan.applied` |
+| Insurance / InsurTech | ~35 | `quote.generated`, `policy.purchased`, `claim.submitted`, `renewal.completed` |
+| EdTech / Online Learning | ~38 | `course.enrolled`, `lesson.completed`, `assessment.submitted`, `certificate.earned` |
+| Healthcare / HealthTech | ~36 | `appointment.booked`, `consultation.completed`, `prescription.created`, `record.accessed` |
+| Marketplace / Platform | ~42 | `listing.created`, `booking.completed`, `transaction.completed`, `review.submitted` |
+| Media / Streaming | ~38 | `content.played`, `subscription.created`, `playlist.created`, `ad.clicked` |
+| Real Estate / PropTech | ~34 | `listing.viewed`, `tour.scheduled`, `application.submitted`, `lease.signed` |
+| HR Tech / Recruitment | ~36 | `job.posted`, `application.submitted`, `interview.scheduled`, `offer.accepted` |
+| Logistics / Supply Chain | ~35 | `shipment.created`, `delivery.completed`, `inventory.updated`, `route.optimized` |
+| Gaming | ~40 | `level.completed`, `purchase.completed`, `match.started`, `achievement.unlocked` |
+
+<Aside type="caution">
+Event counts for domains not yet published (Fintech through Gaming) are approximate. The detailed pages will be added in future updates.
+</Aside>
+
+---
+
+## Next Steps
+
+<CardGrid>
+  <LinkCard
+    title="Event Schema & Taxonomy"
+    description="The canonical event envelope structure, naming rules, reserved system events, and best practices."
+    href="/growthos/api/events/"
+  />
+  <LinkCard
+    title="Ingest API Reference"
+    description="Send events via the track, identify, and page endpoints."
+    href="/growthos/api/ingest-api/"
+  />
+  <LinkCard
+    title="SDKs & Components"
+    description="Client and server SDKs that auto-track system events and simplify custom event tracking."
+    href="/growthos/api/sdks/"
+  />
+</CardGrid>

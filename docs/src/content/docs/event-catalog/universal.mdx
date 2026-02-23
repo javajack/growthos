@@ -1,0 +1,198 @@
+---
+title: "Cross-Domain Universal Events"
+description: "Events that apply to every business domain — authentication, billing, support, notifications, consent, and lifecycle signals."
+---
+
+import { Card, CardGrid, Badge, Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+These events are **required for every GrowthOS installation** regardless of your business domain. They cover the core user lifecycle that every product shares: authentication, billing, support, notifications, consent, and growth signals.
+
+<Aside type="tip">
+Events marked with <Badge text="High" variant="caution" /> are auto-tracked by the GrowthOS SDK where possible. You only need to instrument them manually if you are using the server-side API directly.
+</Aside>
+
+---
+
+## Authentication and Identity
+
+11 events covering signup, login, security, and account management.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `user.signed_up` | `method`, `source`, `referral_code`, `plan` | <Badge text="Low" variant="success" /> | User creates a new account |
+| `user.signed_in` | `method` (password / sso / magic_link / oauth), `provider` | <Badge text="High" variant="caution" /> | User authenticates successfully |
+| `user.signed_out` | `session_duration` | <Badge text="High" variant="caution" /> | User ends their session |
+| `user.password_reset_requested` | `method` | <Badge text="Low" variant="success" /> | User requests a password reset link |
+| `user.password_reset_completed` | `method` | <Badge text="Low" variant="success" /> | Password reset flow completed |
+| `user.email_verified` | `verification_method` | <Badge text="Low" variant="success" /> | User confirms their email address |
+| `user.mfa_enabled` | `mfa_method` (totp / sms / webauthn) | <Badge text="Low" variant="success" /> | Multi-factor authentication turned on |
+| `user.mfa_disabled` | `mfa_method` | <Badge text="Low" variant="success" /> | Multi-factor authentication turned off |
+| `user.profile_updated` | `fields_changed` (array) | <Badge text="Medium" variant="note" /> | User modifies profile fields |
+| `user.deleted` | `reason`, `feedback` | <Badge text="Low" variant="success" /> | User account permanently deleted |
+| `user.impersonated` | `admin_id`, `target_user_id` | <Badge text="Low (admin)" variant="default" /> | Admin impersonates a user for debugging |
+
+---
+
+## Billing and Subscription
+
+13 events covering the full subscription lifecycle and payment processing.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `subscription.created` | `plan_name`, `billing_interval`, `mrr_cents`, `trial` (bool) | <Badge text="Low" variant="success" /> | New subscription activated |
+| `subscription.upgraded` | `from_plan`, `to_plan`, `mrr_delta_cents` | <Badge text="Low" variant="success" /> | Plan upgraded to a higher tier |
+| `subscription.downgraded` | `from_plan`, `to_plan`, `mrr_delta_cents` | <Badge text="Low" variant="success" /> | Plan downgraded to a lower tier |
+| `subscription.renewed` | `plan_name`, `billing_interval`, `mrr_cents` | <Badge text="Low" variant="success" /> | Subscription renews at end of billing period |
+| `subscription.cancelled` | `reason`, `feedback`, `cancel_at_period_end` (bool) | <Badge text="Low" variant="success" /> | User cancels their subscription |
+| `subscription.reactivated` | `plan_name`, `previous_cancel_reason` | <Badge text="Low" variant="success" /> | Previously cancelled subscription restarted |
+| `subscription.trial_started` | `plan_name`, `trial_days` | <Badge text="Low" variant="success" /> | Free trial begins |
+| `subscription.trial_ended` | `plan_name`, `converted` (bool) | <Badge text="Low" variant="success" /> | Free trial expires or converts |
+| `invoice.created` | `invoice_id`, `amount_cents`, `currency` | <Badge text="Low" variant="success" /> | New invoice generated |
+| `invoice.paid` | `invoice_id`, `amount_cents`, `payment_method` | <Badge text="Low" variant="success" /> | Invoice payment received |
+| `invoice.payment_failed` | `invoice_id`, `failure_reason`, `retry_count` | <Badge text="Low" variant="success" /> | Payment attempt failed |
+| `payment_method.added` | `type` (card / bank / wallet), `last_four` | <Badge text="Low" variant="success" /> | New payment method saved |
+| `payment_method.removed` | `type` | <Badge text="Low" variant="success" /> | Payment method deleted |
+
+<Aside type="note">
+Billing events integrate directly with the [Stripe Integration](/growthos/phase-2/stripe-integration/) module. When Stripe webhooks are connected, `subscription.*` and `invoice.*` events are emitted automatically.
+</Aside>
+
+---
+
+## Support and Communication
+
+6 events covering support tickets, live chat, and feedback collection.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `support_ticket.created` | `ticket_id`, `category`, `priority`, `channel` | <Badge text="Low" variant="success" /> | New support ticket opened |
+| `support_ticket.resolved` | `ticket_id`, `resolution_time_hours`, `satisfaction_score` | <Badge text="Low" variant="success" /> | Support ticket marked as resolved |
+| `chat.started` | `channel` (live / bot), `page_url` | <Badge text="Medium" variant="note" /> | Live chat or bot conversation initiated |
+| `chat.message_sent` | `channel`, `is_agent` (bool) | <Badge text="High" variant="caution" /> | Message sent in a chat session |
+| `chat.ended` | `channel`, `duration`, `messages_count` | <Badge text="Medium" variant="note" /> | Chat session concluded |
+| `feedback.submitted` | `type` (bug / feature_request / general), `category` | <Badge text="Low" variant="success" /> | User submits feedback |
+
+---
+
+## Notifications and Consent
+
+8 events covering multi-channel notifications and privacy consent management.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `notification.sent` | `channel` (email / push / sms / in_app), `template_id`, `campaign_id` | <Badge text="High" variant="caution" /> | Notification dispatched to user |
+| `notification.delivered` | `channel`, `template_id` | <Badge text="High" variant="caution" /> | Notification confirmed delivered |
+| `notification.opened` | `channel`, `template_id` | <Badge text="High" variant="caution" /> | User opens a notification |
+| `notification.clicked` | `channel`, `template_id`, `link_url` | <Badge text="Medium" variant="note" /> | User clicks a link inside a notification |
+| `consent.granted` | `purpose` (marketing / analytics / functional), `method` | <Badge text="Low" variant="success" /> | User grants consent for a specific purpose |
+| `consent.revoked` | `purpose`, `method` | <Badge text="Low" variant="success" /> | User revokes previously granted consent |
+| `privacy.data_export_requested` | `format` | <Badge text="Low (admin)" variant="default" /> | User requests a data export (GDPR/CCPA) |
+| `privacy.data_deletion_requested` | `reason` | <Badge text="Low (admin)" variant="default" /> | User requests account data deletion |
+
+---
+
+## Lifecycle Signals
+
+6 events that power growth loop analytics, churn prediction, and reactivation workflows.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `lifecycle.first_value_moment` | `action`, `time_to_value_seconds`, `session_number` | <Badge text="Low" variant="success" /> | User reaches their first "aha" moment |
+| `lifecycle.activation_milestone` | `milestone_name`, `milestone_index`, `days_since_signup` | <Badge text="Low" variant="success" /> | User completes a defined activation milestone |
+| `lifecycle.expansion_signal` | `signal_type`, `score` | <Badge text="Medium" variant="note" /> | Behavior suggests readiness for upsell |
+| `lifecycle.churn_risk_detected` | `risk_score`, `signals` (array), `days_inactive`, `usage_trend` | <Badge text="Low (admin)" variant="default" /> | System flags a user as churn risk |
+| `lifecycle.reactivation_detected` | `days_since_last_active`, `trigger` | <Badge text="Low" variant="success" /> | Previously inactive user returns |
+| `lifecycle.advocacy_triggered` | `trigger` (nps_promoter / review_posted / referral_sent) | <Badge text="Low" variant="success" /> | User exhibits advocacy behavior |
+
+<Aside type="tip">
+Lifecycle signals are the foundation for the [Churn Prediction](/growthos/phase-4/churn-prediction/) and [Contact Scoring](/growthos/phase-2/contact-scoring/) modules. Instrument these early, even if you are not using those modules yet.
+</Aside>
+
+---
+
+## Implementation Example
+
+A typical onboarding flow tracking signup, identity resolution, and the first value moment.
+
+```javascript
+import GrowthOS from '@growthos/js';
+
+const gos = GrowthOS.init('YOUR_WRITE_KEY');
+
+// 1. Track signup
+gos.track('user.signed_up', {
+  method: 'email',
+  source: 'landing_page',
+  referral_code: 'REF_abc123',
+  plan: 'free'
+});
+
+// 2. Identify the user (merges anonymous_id with user_id)
+gos.identify('usr_42', {
+  email: 'jamie@example.com',
+  name: 'Jamie Chen',
+  created_at: '2025-06-15T09:00:00Z',
+  plan: 'free'
+});
+
+// 3. Track activation milestone
+gos.track('lifecycle.activation_milestone', {
+  milestone_name: 'created_first_project',
+  milestone_index: 1,
+  days_since_signup: 0
+});
+
+// 4. Track first value moment
+gos.track('lifecycle.first_value_moment', {
+  action: 'generated_first_report',
+  time_to_value_seconds: 340,
+  session_number: 1
+});
+
+// 5. Track subscription creation
+gos.track('subscription.created', {
+  plan_name: 'pro',
+  billing_interval: 'monthly',
+  mrr_cents: 4900,
+  trial: true
+});
+```
+
+<Aside type="caution">
+Do not put PII (email, phone, full name) in event `properties`. Store PII as traits via `identify()` instead. See the [Event Schema best practices](/growthos/api/events/) for details.
+</Aside>
+
+---
+
+## Total Event Count
+
+| Category | Count |
+|---|---|
+| Authentication and Identity | 11 |
+| Billing and Subscription | 13 |
+| Support and Communication | 6 |
+| Notifications and Consent | 8 |
+| Lifecycle Signals | 6 |
+| **Total** | **44** |
+
+---
+
+## Next Steps
+
+<CardGrid>
+  <LinkCard
+    title="SaaS / B2B Software Events"
+    description="Add domain-specific events for trials, feature adoption, team collaboration, and API usage."
+    href="/growthos/event-catalog/saas/"
+  />
+  <LinkCard
+    title="E-Commerce / D2C Events"
+    description="Add domain-specific events for product discovery, checkout, orders, and loyalty."
+    href="/growthos/event-catalog/ecommerce/"
+  />
+  <LinkCard
+    title="Event Schema & Taxonomy"
+    description="The canonical event envelope, naming rules, and reserved system events."
+    href="/growthos/api/events/"
+  />
+</CardGrid>

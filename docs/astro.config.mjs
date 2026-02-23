@@ -262,6 +262,25 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Event Catalog',
+					items: [
+						{ label: 'Overview', slug: 'event-catalog' },
+						{ label: 'Cross-Domain Universal', slug: 'event-catalog/universal' },
+						{ label: 'SaaS / B2B Software', slug: 'event-catalog/saas' },
+						{ label: 'E-Commerce / D2C', slug: 'event-catalog/ecommerce' },
+						{ label: 'Fintech / Banking', slug: 'event-catalog/fintech' },
+						{ label: 'Insurance / InsurTech', slug: 'event-catalog/insurance' },
+						{ label: 'EdTech / Learning', slug: 'event-catalog/edtech' },
+						{ label: 'Healthcare / HealthTech', slug: 'event-catalog/healthcare' },
+						{ label: 'Marketplace / Platform', slug: 'event-catalog/marketplace' },
+						{ label: 'Media / Streaming', slug: 'event-catalog/media' },
+						{ label: 'Real Estate / PropTech', slug: 'event-catalog/real-estate' },
+						{ label: 'HR Tech / Recruitment', slug: 'event-catalog/hr-tech' },
+						{ label: 'Logistics / Supply Chain', slug: 'event-catalog/logistics' },
+						{ label: 'Gaming', slug: 'event-catalog/gaming' },
+					],
+				},
+				{
 					label: 'API Reference',
 					items: [
 						{ label: 'API Architecture', slug: 'api/overview' },

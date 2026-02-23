@@ -1,0 +1,262 @@
+---
+title: "E-Commerce / D2C Events"
+description: "Event taxonomy for online stores — product discovery, cart management, checkout, order lifecycle, returns, reviews, and loyalty programs."
+---
+
+import { Card, CardGrid, Badge, Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+This page defines domain-specific events for e-commerce and direct-to-consumer (D2C) products. Events are organized by growth loop stage covering the full shopper journey from discovery through advocacy.
+
+<Aside type="tip">
+Before adding these events, make sure you have implemented the [Cross-Domain Universal Events](/growthos/event-catalog/universal/) first. Universal events (authentication, billing, support, lifecycle) are required for all domains.
+</Aside>
+
+<Aside type="note" title="Compatibility">
+This event taxonomy is designed for compatibility with **Segment E-commerce V2** and **Google Analytics 4 (GA4)** e-commerce specs. Property names align closely with both standards. Where GA4 uses `items[]` and Segment uses `products[]`, GrowthOS accepts either and normalizes internally. See the compatibility table at the bottom of this page.
+</Aside>
+
+---
+
+## Acquire
+
+4 events covering user registration, newsletter signups, and promotional engagement.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `user.signed_up` | `method`, `source`, `referral_code`, `campaign_id` | <Badge text="Low" variant="success" /> | New customer account created |
+| `newsletter.subscribed` | `source` (footer / popup / checkout), `list_id`, `email_hash` | <Badge text="Low" variant="success" /> | User subscribes to the email newsletter |
+| `promotion.viewed` | `promotion_id`, `promotion_name`, `creative`, `position` | <Badge text="High" variant="caution" /> | User sees a promotional banner or card |
+| `promotion.clicked` | `promotion_id`, `promotion_name`, `creative`, `position` | <Badge text="Medium" variant="note" /> | User clicks on a promotion |
+
+---
+
+## Activate / Browse
+
+6 events covering product discovery, search, and browsing behavior.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `product.searched` | `query`, `results_count`, `filters_applied` (array) | <Badge text="High" variant="caution" /> | User searches the product catalog |
+| `product_list.viewed` | `list_id`, `list_name`, `category`, `products_count` | <Badge text="High" variant="caution" /> | User views a product list or category page |
+| `product_list.filtered` | `list_id`, `filters` (array), `sort_by`, `results_count` | <Badge text="Medium" variant="note" /> | User applies filters to a product list |
+| `product.clicked` | `product_id`, `product_name`, `category`, `list_id`, `position` | <Badge text="High" variant="caution" /> | User clicks on a product from a list |
+| `product.viewed` | `product_id`, `product_name`, `sku`, `category`, `price_cents`, `currency`, `variant` | <Badge text="High" variant="caution" /> | User views a product detail page |
+| `product.shared` | `product_id`, `product_name`, `share_channel` (email / social / copy_link) | <Badge text="Low" variant="success" /> | User shares a product with others |
+
+---
+
+## Engage / Cart
+
+9 events covering cart management and wishlist activity.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `product.added_to_cart` | `product_id`, `product_name`, `sku`, `quantity`, `price_cents`, `currency`, `variant`, `cart_id` | <Badge text="High" variant="caution" /> | Product added to the shopping cart |
+| `product.removed_from_cart` | `product_id`, `product_name`, `quantity`, `cart_id` | <Badge text="Medium" variant="note" /> | Product removed from the shopping cart |
+| `cart.viewed` | `cart_id`, `items_count`, `subtotal_cents`, `currency` | <Badge text="High" variant="caution" /> | User views the cart page |
+| `cart.updated` | `cart_id`, `items_count`, `subtotal_cents`, `currency`, `change_type` (quantity / variant) | <Badge text="Medium" variant="note" /> | Cart contents modified (quantity or variant change) |
+| `cart.shared` | `cart_id`, `share_method`, `items_count` | <Badge text="Low" variant="success" /> | User shares their cart with someone |
+| `cart.abandoned` | `cart_id`, `items_count`, `subtotal_cents`, `currency`, `last_activity_minutes_ago` | <Badge text="Medium" variant="note" /> | Cart inactive beyond the abandonment threshold |
+| `wishlist.product_added` | `product_id`, `product_name`, `wishlist_id`, `price_cents` | <Badge text="Medium" variant="note" /> | Product added to a wishlist |
+| `wishlist.product_removed` | `product_id`, `wishlist_id` | <Badge text="Low" variant="success" /> | Product removed from a wishlist |
+| `wishlist.added_to_cart` | `product_id`, `wishlist_id`, `cart_id` | <Badge text="Low" variant="success" /> | Product moved from wishlist to cart |
+
+---
+
+## Monetise / Checkout
+
+13 events covering the complete checkout flow, coupon handling, and order lifecycle.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `checkout.started` | `cart_id`, `items_count`, `subtotal_cents`, `currency` | <Badge text="Medium" variant="note" /> | User enters the checkout flow |
+| `checkout.step_viewed` | `checkout_id`, `step_name`, `step_index` | <Badge text="Medium" variant="note" /> | Checkout step page loaded |
+| `checkout.step_completed` | `checkout_id`, `step_name`, `step_index`, `time_on_step_seconds` | <Badge text="Medium" variant="note" /> | Checkout step submitted successfully |
+| `payment_info.entered` | `checkout_id`, `payment_method` (card / wallet / bank / bnpl) | <Badge text="Low" variant="success" /> | User enters payment information |
+| `shipping_info.entered` | `checkout_id`, `shipping_method`, `estimated_delivery_days` | <Badge text="Low" variant="success" /> | User enters shipping details |
+| `coupon.entered` | `checkout_id`, `coupon_code` | <Badge text="Medium" variant="note" /> | User types a coupon code |
+| `coupon.applied` | `checkout_id`, `coupon_code`, `discount_cents`, `discount_type` (percentage / fixed) | <Badge text="Low" variant="success" /> | Coupon code accepted and discount applied |
+| `coupon.denied` | `checkout_id`, `coupon_code`, `denial_reason` | <Badge text="Low" variant="success" /> | Coupon code rejected |
+| `coupon.removed` | `checkout_id`, `coupon_code` | <Badge text="Low" variant="success" /> | User removes a previously applied coupon |
+| `order.completed` | `order_id`, `total_cents`, `currency`, `items_count`, `shipping_cents`, `tax_cents`, `discount_cents`, `payment_method`, `is_first_order` (bool) | <Badge text="Low" variant="success" /> | Order placed successfully |
+| `order.updated` | `order_id`, `update_type` (address / items / shipping_method), `updated_fields` (array) | <Badge text="Low" variant="success" /> | Order modified after placement |
+| `order.cancelled` | `order_id`, `reason`, `cancel_method` (customer / admin / system), `refund_cents` | <Badge text="Low" variant="success" /> | Order cancelled |
+| `order.refunded` | `order_id`, `refund_cents`, `refund_type` (full / partial), `reason` | <Badge text="Low" variant="success" /> | Refund issued for an order |
+
+---
+
+## Advocate
+
+7 events covering reviews, loyalty programs, and referrals.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `review.submitted` | `product_id`, `rating`, `has_text` (bool), `has_images` (bool), `order_id` | <Badge text="Low" variant="success" /> | Customer submits a product review |
+| `review.approved` | `review_id`, `product_id`, `rating`, `moderation_time_hours` | <Badge text="Low (admin)" variant="default" /> | Review approved by moderation |
+| `loyalty.points_earned` | `points`, `source` (purchase / review / referral / birthday), `order_id` | <Badge text="Medium" variant="note" /> | Customer earns loyalty points |
+| `loyalty.points_redeemed` | `points`, `redemption_type` (discount / product / gift_card), `value_cents` | <Badge text="Low" variant="success" /> | Customer redeems loyalty points |
+| `loyalty.tier_upgraded` | `from_tier`, `to_tier`, `total_points`, `qualifying_spend_cents` | <Badge text="Low" variant="success" /> | Customer moves to a higher loyalty tier |
+| `referral.link_shared` | `channel` (email / social / direct / sms), `program_id` | <Badge text="Low" variant="success" /> | Customer shares their referral link |
+| `referral.converted` | `referral_id`, `referrer_id`, `order_id`, `reward_type`, `reward_value_cents` | <Badge text="Low" variant="success" /> | Referred customer completes a purchase |
+
+---
+
+## Operational
+
+7 events covering inventory, shipping, and returns management.
+
+| Event | Key Properties | Volume | Description |
+|---|---|---|---|
+| `inventory.low_stock_alert` | `product_id`, `sku`, `current_stock`, `threshold`, `warehouse_id` | <Badge text="Low (admin)" variant="default" /> | Stock level drops below threshold |
+| `inventory.restocked` | `product_id`, `sku`, `quantity_added`, `new_stock_level`, `warehouse_id` | <Badge text="Low (admin)" variant="default" /> | Product inventory replenished |
+| `shipment.created` | `shipment_id`, `order_id`, `carrier`, `tracking_number`, `items_count` | <Badge text="Low" variant="success" /> | Shipment created for an order |
+| `shipment.delivered` | `shipment_id`, `order_id`, `carrier`, `delivery_days`, `signature_required` (bool) | <Badge text="Low" variant="success" /> | Shipment delivered to customer |
+| `return.requested` | `return_id`, `order_id`, `reason`, `items` (array), `return_method` (mail / store) | <Badge text="Low" variant="success" /> | Customer initiates a return |
+| `return.approved` | `return_id`, `order_id`, `refund_cents`, `refund_method` | <Badge text="Low (admin)" variant="default" /> | Return request approved |
+| `return.completed` | `return_id`, `order_id`, `refund_cents`, `items_received` (array), `processing_days` | <Badge text="Low" variant="success" /> | Return fully processed and refund issued |
+
+---
+
+## Complete Checkout Flow Example
+
+A full tracking sequence from product view through order completion.
+
+```javascript
+import GrowthOS from '@growthos/js';
+
+const gos = GrowthOS.init('YOUR_WRITE_KEY');
+
+// 1. Product viewed
+gos.track('product.viewed', {
+  product_id: 'prod_abc',
+  product_name: 'Merino Wool Sweater',
+  sku: 'MWS-BLU-M',
+  category: 'Apparel/Sweaters',
+  price_cents: 8900,
+  currency: 'USD',
+  variant: 'Blue / Medium'
+});
+
+// 2. Added to cart
+gos.track('product.added_to_cart', {
+  product_id: 'prod_abc',
+  product_name: 'Merino Wool Sweater',
+  sku: 'MWS-BLU-M',
+  quantity: 1,
+  price_cents: 8900,
+  currency: 'USD',
+  variant: 'Blue / Medium',
+  cart_id: 'cart_xyz'
+});
+
+// 3. Checkout started
+gos.track('checkout.started', {
+  cart_id: 'cart_xyz',
+  items_count: 1,
+  subtotal_cents: 8900,
+  currency: 'USD'
+});
+
+// 4. Shipping info entered
+gos.track('shipping_info.entered', {
+  checkout_id: 'chk_123',
+  shipping_method: 'standard',
+  estimated_delivery_days: 5
+});
+
+// 5. Coupon applied
+gos.track('coupon.applied', {
+  checkout_id: 'chk_123',
+  coupon_code: 'WELCOME10',
+  discount_cents: 890,
+  discount_type: 'percentage'
+});
+
+// 6. Payment info entered
+gos.track('payment_info.entered', {
+  checkout_id: 'chk_123',
+  payment_method: 'card'
+});
+
+// 7. Order completed
+gos.track('order.completed', {
+  order_id: 'ord_456',
+  total_cents: 8510,
+  currency: 'USD',
+  items_count: 1,
+  shipping_cents: 500,
+  tax_cents: 0,
+  discount_cents: 890,
+  payment_method: 'card',
+  is_first_order: true
+});
+
+// 8. Loyalty points earned
+gos.track('loyalty.points_earned', {
+  points: 85,
+  source: 'purchase',
+  order_id: 'ord_456'
+});
+```
+
+---
+
+## Segment and GA4 Compatibility
+
+GrowthOS e-commerce events are designed to map cleanly to both Segment E-commerce V2 and GA4 enhanced e-commerce.
+
+| GrowthOS Event | Segment V2 Equivalent | GA4 Equivalent |
+|---|---|---|
+| `product.viewed` | `Product Viewed` | `view_item` |
+| `product_list.viewed` | `Product List Viewed` | `view_item_list` |
+| `product.added_to_cart` | `Product Added` | `add_to_cart` |
+| `product.removed_from_cart` | `Product Removed` | `remove_from_cart` |
+| `cart.viewed` | `Cart Viewed` | `view_cart` |
+| `checkout.started` | `Checkout Started` | `begin_checkout` |
+| `payment_info.entered` | `Payment Info Entered` | `add_payment_info` |
+| `shipping_info.entered` | `Checkout Step Completed` | `add_shipping_info` |
+| `order.completed` | `Order Completed` | `purchase` |
+| `order.refunded` | `Order Refunded` | `refund` |
+| `promotion.viewed` | `Promotion Viewed` | `view_promotion` |
+| `promotion.clicked` | `Promotion Clicked` | `select_promotion` |
+| `product.searched` | `Products Searched` | `search` |
+
+<Aside type="tip">
+If you are migrating from Segment or GA4, you can use GrowthOS event aliases to accept your existing event names during the transition. Configure aliases in **Settings, then Events, then Aliases**.
+</Aside>
+
+---
+
+## Event Count by Stage
+
+| Stage | Count | Key Metric |
+|---|---|---|
+| Acquire | 4 | New customer acquisition |
+| Activate / Browse | 6 | Product discovery depth |
+| Engage / Cart | 9 | Cart conversion rate |
+| Monetise / Checkout | 13 | Revenue and AOV |
+| Advocate | 7 | Repeat purchase and referral rate |
+| Operational | 7 | Fulfillment health |
+| **Total** | **46** | |
+
+---
+
+## Next Steps
+
+<CardGrid>
+  <LinkCard
+    title="Cross-Domain Universal Events"
+    description="Required baseline events for authentication, billing, support, and lifecycle signals."
+    href="/growthos/event-catalog/universal/"
+  />
+  <LinkCard
+    title="SaaS / B2B Software Events"
+    description="Event taxonomy for trials, feature adoption, and team collaboration."
+    href="/growthos/event-catalog/saas/"
+  />
+  <LinkCard
+    title="Event Schema & Taxonomy"
+    description="Canonical event envelope, naming rules, and reserved system events."
+    href="/growthos/api/events/"
+  />
+</CardGrid>
