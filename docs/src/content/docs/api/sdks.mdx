@@ -1,0 +1,675 @@
+---
+title: "SDKs & Web Components"
+description: "Official SDKs for JavaScript, Node.js, and Python. Embeddable Web Components for referral widgets, surveys, and waitlist forms."
+---
+
+import { Card, CardGrid, Badge, Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+GrowthOS provides official SDKs and drop-in Web Components so you can integrate tracking, referrals, surveys, and more with minimal effort. Every SDK is open source and wraps the same public APIs you can call directly.
+
+<CardGrid>
+  <Card title="JavaScript SDK" icon="seti:javascript">
+    Browser-side tracking and identification. Lightweight, auto-tracks page views and UTM params.
+  </Card>
+  <Card title="Node.js SDK" icon="seti:nodejs">
+    Server-side access to the full Management API. Auto-batches ingest events for performance.
+  </Card>
+  <Card title="Python SDK" icon="seti:python">
+    Management and Ingest APIs with sync and async clients. Ideal for data pipelines and backend services.
+  </Card>
+  <Card title="Web Components" icon="puzzle">
+    Framework-agnostic, embeddable UI components for referrals, surveys, waitlists, and more.
+  </Card>
+</CardGrid>
+
+---
+
+## JavaScript SDK (Browser)
+
+<Badge text="@growthos/js" variant="note" />
+
+The browser SDK handles client-side event tracking, user identification, and page view capture. It uses your **Write Key** and communicates exclusively with the Ingest API.
+
+### Installation
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install @growthos/js
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @growthos/js
+    ```
+  </TabItem>
+  <TabItem label="CDN">
+    ```html
+    <script src="https://cdn.growthos.io/js/v1/growthos.min.js"></script>
+    ```
+  </TabItem>
+</Tabs>
+
+### Initialization and Usage
+
+```javascript
+import GrowthOS from '@growthos/js';
+
+// Initialize with your Write Key (safe for client-side)
+const growthos = GrowthOS.init({
+  writeKey: 'gos_wk_your_write_key',
+  autoTrack: {
+    pageViews: true,     // auto-track page views
+    utmParams: true,     // capture UTM parameters from URL
+    referrer: true,      // capture document.referrer
+  },
+});
+
+// Identify a logged-in user
+growthos.identify('user_123', {
+  email: 'jane@acme.com',
+  name: 'Jane Doe',
+  plan: 'growth',
+  signedUpAt: '2025-03-15T10:00:00Z',
+});
+
+// Track a custom event
+growthos.track('Feature Activated', {
+  feature: 'referral_program',
+  source: 'onboarding_checklist',
+});
+
+// Manual page view (for SPAs)
+growthos.page('Pricing', {
+  category: 'Marketing',
+  url: window.location.href,
+});
+
+// Associate a user with a company
+growthos.group('company_456', {
+  name: 'Acme Corp',
+  industry: 'SaaS',
+  employees: 50,
+});
+
+// Alias an anonymous ID to a known user
+growthos.alias('user_123', 'anon_abc789');
+```
+
+### Available Methods
+
+| Method | Description |
+|---|---|
+| `growthos.identify(userId, traits)` | Associate traits with a user. Call on login or profile update. |
+| `growthos.track(event, properties)` | Record a custom event with optional properties. |
+| `growthos.page(name, properties)` | Record a page view. Auto-called if `autoTrack.pageViews` is enabled. |
+| `growthos.group(groupId, traits)` | Associate the user with a company or organization. |
+| `growthos.alias(userId, anonymousId)` | Link an anonymous visitor to an authenticated user. |
+
+### SPA Support
+
+The SDK automatically detects route changes in popular frameworks and fires page view events. No additional configuration is required for:
+
+- **React Router** (v5 and v6)
+- **Next.js** (App Router and Pages Router)
+- **Vue Router**
+- **SvelteKit**
+
+For custom routers, call `growthos.page()` manually after each navigation.
+
+### Privacy
+
+The JavaScript SDK respects user privacy by default:
+
+- **Do Not Track** — Honors the browser `DNT` header. When enabled, no events are sent.
+- **GDPR Consent Mode** — Defer initialization until the user consents:
+
+```javascript
+const growthos = GrowthOS.init({
+  writeKey: 'gos_wk_your_write_key',
+  consentMode: 'deferred', // SDK loads but does not send events
+});
+
+// After user grants consent:
+growthos.grantConsent();
+```
+
+---
+
+## Node.js SDK (Server)
+
+<Badge text="@growthos/node" variant="note" />
+
+The server-side SDK gives you full access to both the **Ingest API** and the **Management API**. It uses your **Secret Key** and should only run in trusted server environments.
+
+### Installation
+
+```bash
+npm install @growthos/node
+```
+
+### Initialization
+
+```javascript
+import GrowthOS from '@growthos/node';
+
+const growthos = new GrowthOS({
+  secretKey: process.env.GROWTHOS_SECRET_KEY, // gos_sk_...
+  // Batching options for ingest calls
+  batch: {
+    maxSize: 100,     // flush after 100 events
+    flushInterval: 5000, // or every 5 seconds
+  },
+});
+```
+
+### Management API Methods
+
+The SDK mirrors the Management API with intuitive resource methods:
+
+```javascript
+// List contacts with filtering
+const contacts = await growthos.contacts.list({
+  filter: { trait: 'plan', operator: 'eq', value: 'growth' },
+  limit: 50,
+});
+
+// Get a single contact
+const contact = await growthos.contacts.get('usr_123');
+
+// Create a campaign
+const campaign = await growthos.campaigns.create({
+  name: 'Onboarding Drip — Growth Plan',
+  type: 'drip',
+  segment_id: 'seg_growth_users',
+  steps: [
+    { delay: '0h', template_id: 'tpl_welcome' },
+    { delay: '24h', template_id: 'tpl_feature_intro' },
+    { delay: '72h', template_id: 'tpl_invite_team' },
+  ],
+});
+
+// Server-side event tracking (auto-batched)
+growthos.track({
+  userId: 'user_123',
+  event: 'Subscription Upgraded',
+  properties: {
+    previousPlan: 'starter',
+    newPlan: 'growth',
+    mrr: 99,
+  },
+});
+
+// Flush pending events before process exit
+await growthos.flush();
+```
+
+### Available Resources
+
+| Resource | Methods |
+|---|---|
+| `growthos.contacts` | `list()`, `get()`, `create()`, `update()`, `delete()`, `merge()` |
+| `growthos.campaigns` | `list()`, `get()`, `create()`, `update()`, `activate()`, `pause()` |
+| `growthos.segments` | `list()`, `get()`, `create()`, `query()` |
+| `growthos.referrals` | `list()`, `get()`, `createProgram()`, `getStats()` |
+| `growthos.surveys` | `list()`, `get()`, `create()`, `getResponses()` |
+| `growthos.waitlists` | `list()`, `get()`, `create()`, `approve()` |
+| `growthos.webhooks` | `list()`, `create()`, `delete()`, `test()` |
+
+---
+
+## Python SDK
+
+<Badge text="growthos-python" variant="note" />
+
+The Python SDK provides the same resource structure as the Node.js SDK, with both synchronous and asynchronous clients.
+
+### Installation
+
+```bash
+pip install growthos-python
+```
+
+### Synchronous Client
+
+```python
+from growthos import GrowthOS
+
+client = GrowthOS(secret_key="gos_sk_your_secret_key")
+
+# List contacts
+contacts = client.contacts.list(limit=25)
+
+# Track an event (auto-batched)
+client.track(
+    user_id="user_123",
+    event="Subscription Upgraded",
+    properties={
+        "previous_plan": "starter",
+        "new_plan": "growth",
+        "mrr": 99,
+    },
+)
+
+# Create a referral program
+program = client.referrals.create_program(
+    name="Customer Referral Program",
+    reward_type="credit",
+    reward_amount=20,
+    reward_currency="USD",
+)
+
+# Flush before exit
+client.flush()
+client.close()
+```
+
+### Async Client
+
+```python
+from growthos import GrowthOS
+
+async def main():
+    client = GrowthOS.async_client(secret_key="gos_sk_your_secret_key")
+
+    contacts = await client.contacts.list(limit=25)
+    await client.track(
+        user_id="user_123",
+        event="Report Generated",
+        properties={"report_type": "monthly_growth"},
+    )
+
+    await client.flush()
+    await client.close()
+```
+
+<Aside type="tip" title="Context manager support">
+  Both clients support context managers (`with` / `async with`) for automatic cleanup and flushing on exit.
+</Aside>
+
+---
+
+## Web Components
+
+GrowthOS ships a set of **framework-agnostic Web Components** that you can drop into any HTML page, React app, Vue project, or static site. They use the Ingest API internally and require only a Write Key.
+
+### Setup
+
+Add the component library via CDN or npm:
+
+<Tabs>
+  <TabItem label="CDN">
+    ```html
+    <script
+      src="https://cdn.growthos.io/components/v1/growthos-components.min.js"
+      type="module"
+    ></script>
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash
+    npm install @growthos/components
+    ```
+    ```javascript
+    import '@growthos/components';
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Referral Widget
+
+`<growthos-referral-widget>` — A complete referral UI with share link, copy button, social sharing, and referral stats.
+
+```html
+<growthos-referral-widget
+  write-key="gos_wk_your_write_key"
+  program-id="prog_001"
+  user-id="user_123"
+  theme="light"
+></growthos-referral-widget>
+```
+
+**Key Attributes:**
+
+| Attribute | Type | Description |
+|---|---|---|
+| `write-key` | string | Your GrowthOS Write Key |
+| `program-id` | string | Referral program ID |
+| `user-id` | string | Current user ID (for personalized link) |
+| `theme` | `light` or `dark` | Color theme |
+| `show-stats` | boolean | Display referral count and reward balance |
+| `share-channels` | string | Comma-separated list: `email,twitter,linkedin,copy` |
+
+**Theming via CSS Custom Properties:**
+
+```css
+growthos-referral-widget {
+  --gos-primary: #6c5ce7;
+  --gos-border-radius: 8px;
+  --gos-font-family: 'Inter', sans-serif;
+  --gos-bg: #ffffff;
+  --gos-text: #1a1a2e;
+}
+```
+
+**Events Emitted:**
+
+| Event | Detail |
+|---|---|
+| `gos:link-copied` | Referral link copied to clipboard |
+| `gos:share-clicked` | Social share button clicked (includes channel) |
+| `gos:referral-stats-loaded` | Stats fetched and rendered |
+
+---
+
+### Survey / NPS
+
+`<growthos-survey>` — Inline or modal survey and NPS collection.
+
+```html
+<growthos-survey
+  write-key="gos_wk_your_write_key"
+  survey-id="srv_nps_q1"
+  user-id="user_123"
+  display="inline"
+></growthos-survey>
+```
+
+**Key Attributes:**
+
+| Attribute | Type | Description |
+|---|---|---|
+| `write-key` | string | Your GrowthOS Write Key |
+| `survey-id` | string | Survey ID from the dashboard |
+| `user-id` | string | Current user ID |
+| `display` | `inline` or `modal` | Rendering mode |
+| `delay` | number | Milliseconds before showing (modal mode) |
+| `dismiss-on-complete` | boolean | Auto-hide after submission |
+
+**Theming:**
+
+```css
+growthos-survey {
+  --gos-primary: #6c5ce7;
+  --gos-nps-active: #00b894;
+  --gos-nps-inactive: #dfe6e9;
+  --gos-font-family: 'Inter', sans-serif;
+}
+```
+
+**Events Emitted:**
+
+| Event | Detail |
+|---|---|
+| `gos:survey-displayed` | Survey rendered or modal opened |
+| `gos:survey-submitted` | Response submitted (includes score and answers) |
+| `gos:survey-dismissed` | User dismissed the survey |
+
+---
+
+### Waitlist Form
+
+`<growthos-waitlist>` — Signup form with live position display and referral boost messaging.
+
+```html
+<growthos-waitlist
+  write-key="gos_wk_your_write_key"
+  waitlist-id="wl_launch_2025"
+  referral-boost="true"
+></growthos-waitlist>
+```
+
+**Key Attributes:**
+
+| Attribute | Type | Description |
+|---|---|---|
+| `write-key` | string | Your GrowthOS Write Key |
+| `waitlist-id` | string | Waitlist ID |
+| `referral-boost` | boolean | Show "share to move up" after signup |
+| `show-position` | boolean | Display current position after signup |
+| `fields` | string | Comma-separated extra fields: `name,company` |
+
+**Events Emitted:**
+
+| Event | Detail |
+|---|---|
+| `gos:waitlist-joined` | User signed up (includes position) |
+| `gos:waitlist-shared` | User shared their referral link |
+
+---
+
+### Social Proof
+
+`<growthos-social-proof>` — Toast notifications showing recent activity ("X people signed up today").
+
+```html
+<growthos-social-proof
+  write-key="gos_wk_your_write_key"
+  event-type="waitlist.entry_created"
+  message-template="\{count\} people joined the waitlist today"
+  position="bottom-left"
+></growthos-social-proof>
+```
+
+**Key Attributes:**
+
+| Attribute | Type | Description |
+|---|---|---|
+| `write-key` | string | Your GrowthOS Write Key |
+| `event-type` | string | Event to aggregate for count |
+| `message-template` | string | Display message (use count placeholder) |
+| `position` | string | `bottom-left`, `bottom-right`, `top-left`, `top-right` |
+| `interval` | number | Seconds between toast appearances |
+| `show-recent-names` | boolean | Show first names of recent signups |
+
+**Events Emitted:**
+
+| Event | Detail |
+|---|---|
+| `gos:proof-displayed` | Toast notification shown |
+| `gos:proof-clicked` | User clicked the notification |
+
+---
+
+### Onboarding Checklist
+
+`<growthos-onboarding>` — A step-by-step checklist widget to guide new users through setup.
+
+```html
+<growthos-onboarding
+  write-key="gos_wk_your_write_key"
+  checklist-id="onb_getting_started"
+  user-id="user_123"
+  position="bottom-right"
+></growthos-onboarding>
+```
+
+**Key Attributes:**
+
+| Attribute | Type | Description |
+|---|---|---|
+| `write-key` | string | Your GrowthOS Write Key |
+| `checklist-id` | string | Checklist ID from the dashboard |
+| `user-id` | string | Current user ID |
+| `position` | string | Widget position on screen |
+| `collapsed` | boolean | Start in collapsed state |
+
+**Events Emitted:**
+
+| Event | Detail |
+|---|---|
+| `gos:step-completed` | User completed a checklist step |
+| `gos:checklist-completed` | All steps completed |
+| `gos:checklist-dismissed` | User dismissed the checklist |
+
+---
+
+### Nudge System
+
+`<growthos-nudge>` — Contextual banners, modals, and tooltips triggered by user behavior or manual activation.
+
+```html
+<growthos-nudge
+  write-key="gos_wk_your_write_key"
+  nudge-id="ndg_upgrade_prompt"
+  user-id="user_123"
+  type="banner"
+  position="top"
+></growthos-nudge>
+```
+
+**Key Attributes:**
+
+| Attribute | Type | Description |
+|---|---|---|
+| `write-key` | string | Your GrowthOS Write Key |
+| `nudge-id` | string | Nudge ID from the dashboard |
+| `user-id` | string | Current user ID |
+| `type` | string | `banner`, `modal`, or `tooltip` |
+| `position` | string | Placement: `top`, `bottom`, `center` (varies by type) |
+| `trigger` | string | `auto` (rule-based), `manual`, or `delay:5000` |
+| `dismissable` | boolean | Whether the user can close the nudge |
+
+**Events Emitted:**
+
+| Event | Detail |
+|---|---|
+| `gos:nudge-displayed` | Nudge shown to user |
+| `gos:nudge-clicked` | User clicked the nudge CTA |
+| `gos:nudge-dismissed` | User dismissed the nudge |
+
+---
+
+## Framework Guides
+
+While the Web Components work in any framework out of the box, GrowthOS provides thin wrapper packages for better developer experience in popular frameworks.
+
+<Tabs>
+  <TabItem label="React">
+    ```bash
+    npm install @growthos/react
+    ```
+
+    ```jsx
+    import { GrowthOSProvider, useGrowthOS, ReferralWidget } from '@growthos/react';
+
+    function App() {
+      return (
+        <GrowthOSProvider writeKey="gos_wk_your_write_key">
+          <Dashboard />
+        </GrowthOSProvider>
+      );
+    }
+
+    function Dashboard() {
+      const { identify, track } = useGrowthOS();
+
+      useEffect(() => {
+        identify('user_123', { email: 'jane@acme.com' });
+      }, []);
+
+      return (
+        <div>
+          <ReferralWidget programId="prog_001" userId="user_123" />
+          <button onClick={() => track('CTA Clicked', { location: 'dashboard' })}>
+            Invite Friends
+          </button>
+        </div>
+      );
+    }
+    ```
+
+    The React package provides typed hooks (`useGrowthOS`, `useReferralStats`, `useSurvey`) and component wrappers (`ReferralWidget`, `Survey`, `Waitlist`, etc.) with full TypeScript support.
+  </TabItem>
+  <TabItem label="Vue">
+    ```bash
+    npm install @growthos/vue
+    ```
+
+    ```vue
+    <script setup>
+    import { GrowthOSPlugin, ReferralWidget } from '@growthos/vue';
+    </script>
+
+    <template>
+      <ReferralWidget program-id="prog_001" :user-id="currentUser.id" />
+    </template>
+    ```
+
+    Install the plugin in your app entry to enable `useGrowthOS()` composable across all components.
+  </TabItem>
+  <TabItem label="Next.js">
+    For **Next.js**, use the JavaScript SDK in Client Components and the Node.js SDK in Server Components and Route Handlers.
+
+    ```jsx
+    // app/providers.jsx — Client Component
+    'use client';
+    import { GrowthOSProvider } from '@growthos/react';
+
+    export function Providers({ children }) {
+      return (
+        <GrowthOSProvider writeKey="gos_wk_your_write_key">
+          {children}
+        </GrowthOSProvider>
+      );
+    }
+    ```
+
+    ```javascript
+    // app/api/webhooks/route.js — Server-side
+    import GrowthOS from '@growthos/node';
+
+    const growthos = new GrowthOS({
+      secretKey: process.env.GROWTHOS_SECRET_KEY,
+    });
+
+    export async function POST(request) {
+      const contacts = await growthos.contacts.list({ limit: 10 });
+      return Response.json(contacts);
+    }
+    ```
+  </TabItem>
+  <TabItem label="Astro">
+    Astro supports Web Components natively — no wrapper package needed. Just include the CDN script and use the components directly in your `.astro` files.
+
+    ```astro
+    ---
+    // No import needed — Web Components are framework-agnostic
+    ---
+    <script src="https://cdn.growthos.io/components/v1/growthos-components.min.js" type="module"></script>
+
+    <growthos-referral-widget
+      write-key="gos_wk_your_write_key"
+      program-id="prog_001"
+      user-id="user_123"
+    />
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Custom UI
+
+<Aside type="tip" title="API-first philosophy">
+  Every Web Component above is a convenience wrapper around the public **Ingest API** and **Management API**. If the prebuilt components do not fit your design system or you need full control, you can build entirely custom UIs by calling the APIs directly.
+
+  For example, `<growthos-referral-widget>` internally calls `GET /v1/referrals/link` to fetch the share URL and `GET /v1/referrals/stats` to display conversion counts. You can make these same calls from your own React, Vue, or vanilla JS code and render the data however you like.
+
+  See the [API Overview](/growthos/api/overview/) for the full endpoint reference.
+</Aside>
+
+<CardGrid>
+  <LinkCard
+    title="Ingest API Reference"
+    description="Track events, identify users, and record page views from client-side code."
+    href="/growthos/api/ingest-api/"
+  />
+  <LinkCard
+    title="Management API Reference"
+    description="Full CRUD access to contacts, campaigns, segments, referrals, and more."
+    href="/growthos/api/management-api/"
+  />
+</CardGrid>

@@ -1,0 +1,355 @@
+---
+title: "Authentication & Security"
+description: "API key types, scopes, JWT tokens, HMAC webhook signing, and multi-tenant security model."
+---
+
+import { Card, CardGrid, LinkCard, Badge, Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+## Key Types
+
+GrowthOS uses two distinct API key types, each designed for a specific trust boundary.
+
+<CardGrid>
+  <Card title="Write Key" icon="rocket">
+    **Prefix:** `gos_wk_`
+
+    Client-safe. Embed directly in your JavaScript SDK, browser code, or mobile app. Write keys can **only** call Ingest API endpoints — they cannot read data, modify resources, or access admin functions.
+
+    Auto-generated when you create a project. One write key per project by default.
+  </Card>
+  <Card title="Secret Key" icon="warning">
+    **Prefix:** `gos_sk_`
+
+    Server-side only. **Never expose in client-side code, public repos, or frontend bundles.** Secret keys call the Management API and are created with granular permission scopes.
+
+    You can create multiple secret keys per project, each with different scopes for different services.
+  </Card>
+</CardGrid>
+
+<Aside type="danger" title="Never expose Secret Keys">
+  Secret keys (`gos_sk_`) grant full or scoped access to your project data. If a secret key is leaked, revoke it immediately in the dashboard and rotate. See the **Key Rotation** section below.
+</Aside>
+
+---
+
+## Authentication Methods
+
+<Tabs>
+  <TabItem label="Ingest API">
+    The Ingest API accepts write keys via **header** or **query parameter**.
+
+    **Option 1 — Authorization header (recommended):**
+    ```http
+    POST /v1/track HTTP/1.1
+    Host: ingest.growthos.io
+    Authorization: Bearer gos_wk_your_write_key
+    Content-Type: application/json
+
+    {
+      "event": "Signup Completed",
+      "user_id": "user_123",
+      "properties": {
+        "plan": "growth"
+      }
+    }
+    ```
+
+    **Option 2 — Query parameter:**
+    ```
+    POST /v1/track?writeKey=gos_wk_your_write_key
+    ```
+
+    <Aside type="note">
+      The query parameter method is provided for environments where setting headers is difficult (pixel tracking, simple webhooks). Prefer the header method when possible.
+    </Aside>
+  </TabItem>
+  <TabItem label="Management API">
+    The Management API accepts secret keys via **header only**. Query parameter auth is not supported for security reasons.
+
+    ```http
+    GET /v1/contacts?limit=50 HTTP/1.1
+    Host: api.growthos.io
+    Authorization: Bearer gos_sk_your_secret_key
+    Content-Type: application/json
+    ```
+
+    <Aside type="danger">
+      The Management API deliberately does not support query parameter authentication. Secret keys in URLs can leak via server logs, browser history, and referrer headers.
+    </Aside>
+  </TabItem>
+</Tabs>
+
+---
+
+## Scopes (Management API)
+
+Secret keys are created with granular scopes that control which resources and operations the key can access. Follow the principle of least privilege — grant only the scopes each service needs.
+
+| Scope | Permission |
+|---|---|
+| `contacts:read` | View contacts and their properties |
+| `contacts:write` | Create, update, and delete contacts |
+| `events:read` | Query event history and raw event data |
+| `campaigns:read` | View email campaigns and their status |
+| `campaigns:write` | Create, update, send, and archive campaigns |
+| `referrals:read` | View referral programs and participant data |
+| `referrals:write` | Create and modify referral programs |
+| `segments:read` | View segment definitions and membership |
+| `segments:write` | Create, update, and delete segments |
+| `surveys:read` | View surveys and response data |
+| `surveys:write` | Create, update, and publish surveys |
+| `waitlists:read` | View waitlists and subscriber data |
+| `waitlists:write` | Create, manage, and promote waitlist entries |
+| `webhooks:read` | View webhook subscriptions |
+| `webhooks:write` | Create, update, and delete webhook subscriptions |
+| `analytics:read` | Query analytics dashboards and reports |
+| `settings:read` | View project settings and configuration |
+| `settings:write` | Modify project settings |
+| `billing:read` | View billing information and usage |
+| `*` | <Badge text="Full access (admin)" variant="caution" /> — grants all scopes |
+
+### Example: Creating a Scoped Key
+
+```json
+POST /v1/api-keys
+{
+  "name": "Email Service",
+  "scopes": ["contacts:read", "campaigns:read", "campaigns:write"]
+}
+```
+
+Response:
+```json
+{
+  "id": "key_8x2m4k",
+  "name": "Email Service",
+  "key": "gos_sk_live_abc123...",
+  "scopes": ["contacts:read", "campaigns:read", "campaigns:write"],
+  "created_at": "2026-02-23T10:00:00Z"
+}
+```
+
+<Aside type="caution">
+  The full secret key is shown only once at creation time. Store it securely in your secrets manager. If lost, you must revoke and create a new key.
+</Aside>
+
+### Scope Errors
+
+If a key attempts an operation outside its scopes, the API returns `403 Forbidden`:
+
+```json
+{
+  "error": {
+    "code": "insufficient_scope",
+    "message": "This API key does not have the 'contacts:write' scope required for this operation.",
+    "details": [
+      {
+        "required_scope": "contacts:write",
+        "granted_scopes": ["contacts:read", "campaigns:read", "campaigns:write"]
+      }
+    ]
+  },
+  "request_id": "req_9z3n5p7q"
+}
+```
+
+---
+
+## Multi-Tenant Security
+
+GrowthOS enforces strict tenant isolation at the database level using **PostgreSQL Row-Level Security (RLS)**.
+
+```mermaid
+flowchart LR
+  REQ["API Request + Key"] --> LOOKUP["Key → tenant_id Lookup"]
+  LOOKUP --> RLS["SET app.current_tenant = tenant_id"]
+  RLS --> QUERY["Query Execution with RLS Policy"]
+  QUERY --> DATA["Only tenant's rows returned"]
+```
+
+### How It Works
+
+<Steps>
+  1. Every API request includes an API key (write key or secret key)
+  2. The API gateway resolves the key to a `tenant_id`
+  3. The database session variable `app.current_tenant` is set before any query executes
+  4. RLS policies on every table enforce `WHERE tenant_id = current_setting('app.current_tenant')` automatically
+  5. Results are guaranteed to contain only the requesting tenant's data
+</Steps>
+
+<CardGrid>
+  <Card title="No cross-tenant leaks" icon="approve-check">
+    Even a SQL injection vulnerability cannot access another tenant's data — the RLS policy is enforced by PostgreSQL itself, not application code.
+  </Card>
+  <Card title="Audit trail" icon="document">
+    Every API request is logged with `tenant_id`, `api_key_id`, and `request_id` for full traceability.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+  Tenant isolation is tested continuously with automated cross-tenant access tests in CI. Any query that returns rows from a different tenant fails the build.
+</Aside>
+
+---
+
+## Webhook Signing
+
+GrowthOS signs all outbound webhook payloads with **HMAC-SHA256** so you can verify they originated from GrowthOS and have not been tampered with.
+
+### Signature Headers
+
+| Header | Description |
+|---|---|
+| `X-GrowthOS-Signature` | HMAC-SHA256 hex digest of the signed payload |
+| `X-GrowthOS-Timestamp` | Unix timestamp (seconds) when the webhook was sent |
+
+### Verification Process
+
+<Steps>
+  1. Extract the `X-GrowthOS-Timestamp` and `X-GrowthOS-Signature` headers
+  2. Concatenate: `timestamp + "." + raw_request_body`
+  3. Compute HMAC-SHA256 using your webhook endpoint's signing secret
+  4. Compare the computed signature with `X-GrowthOS-Signature` using a timing-safe comparison
+  5. Reject if the timestamp is older than 5 minutes (replay protection)
+</Steps>
+
+### Code Examples
+
+<Tabs>
+  <TabItem label="Node.js">
+    ```javascript
+    import crypto from 'crypto';
+
+    function verifyWebhook(req, signingSecret) {
+      const signature = req.headers['x-growthos-signature'];
+      const timestamp = req.headers['x-growthos-timestamp'];
+      const body = req.rawBody; // raw request body as string
+
+      // Replay protection: reject if older than 5 minutes
+      const age = Math.floor(Date.now() / 1000) - parseInt(timestamp, 10);
+      if (age > 300) {
+        throw new Error('Webhook timestamp too old — possible replay attack');
+      }
+
+      // Compute expected signature
+      const payload = `${timestamp}.${body}`;
+      const expected = crypto
+        .createHmac('sha256', signingSecret)
+        .update(payload)
+        .digest('hex');
+
+      // Timing-safe comparison
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expected)
+      );
+
+      if (!isValid) {
+        throw new Error('Invalid webhook signature');
+      }
+
+      return JSON.parse(body);
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import hmac
+    import hashlib
+    import time
+
+    def verify_webhook(headers, body, signing_secret):
+        signature = headers['X-GrowthOS-Signature']
+        timestamp = headers['X-GrowthOS-Timestamp']
+
+        # Replay protection: reject if older than 5 minutes
+        age = int(time.time()) - int(timestamp)
+        if age > 300:
+            raise ValueError('Webhook timestamp too old')
+
+        # Compute expected signature
+        payload = f"{timestamp}.{body}"
+        expected = hmac.new(
+            signing_secret.encode(),
+            payload.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        # Timing-safe comparison
+        if not hmac.compare_digest(signature, expected):
+            raise ValueError('Invalid webhook signature')
+
+        return True
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  Always use timing-safe comparison functions (`crypto.timingSafeEqual` in Node.js, `hmac.compare_digest` in Python) to prevent timing attacks. Do not use `===` or `==` for signature comparison.
+</Aside>
+
+---
+
+## IP Allowlisting
+
+<Badge text="Enterprise" variant="note" />
+
+For organizations with strict network security requirements, Management API access can be restricted to specific IP addresses or CIDR ranges.
+
+```json
+POST /v1/settings/ip-allowlist
+{
+  "ranges": [
+    "203.0.113.0/24",
+    "198.51.100.42/32"
+  ]
+}
+```
+
+When IP allowlisting is enabled:
+- Requests to the **Management API** from non-allowed IPs receive `403 Forbidden`
+- The **Ingest API** is unaffected — client-side tracking continues to work from any IP
+- Dashboard access can optionally be restricted to the same allowlist
+
+<Aside type="tip">
+  Start with a broad CIDR range during setup and narrow it down once your infrastructure IPs are confirmed. Locking yourself out requires a support ticket to reset.
+</Aside>
+
+---
+
+## Key Rotation
+
+Rotating API keys without downtime follows a three-step process.
+
+<Steps>
+  1. **Create a new key** in the dashboard or via the API. The new key is active immediately
+  2. **Update your integrations** to use the new key. Deploy the changes across all services that reference the old key
+  3. **Revoke the old key** in the dashboard. A **24-hour grace period** begins — the old key continues to work during this window to cover staggered deployments
+</Steps>
+
+### Grace Period Timeline
+
+```mermaid
+gantt
+  title Key Rotation Timeline
+  dateFormat  HH:mm
+  axisFormat  %H:%M
+
+  section Keys
+  New key created and active       :active, a1, 00:00, 1h
+  Old key still works (grace)      :a2, after a1, 24h
+  Old key permanently revoked      :crit, a3, after a2, 1h
+```
+
+<Aside type="note">
+  During the grace period, both old and new keys work. After 24 hours the old key is permanently revoked and returns `401 Unauthenticated`. Plan your deployments accordingly.
+</Aside>
+
+<CardGrid>
+  <Card title="Scheduled rotation" icon="random">
+    Set up automatic key rotation on a schedule (30, 60, or 90 days) in project settings. The system creates the new key and sends a webhook notification — your CI/CD pipeline handles the swap.
+  </Card>
+  <Card title="Emergency revocation" icon="warning">
+    If a key is compromised, you can revoke it immediately with **no grace period**. This is a hard cut — all requests with the revoked key fail instantly.
+  </Card>
+</CardGrid>

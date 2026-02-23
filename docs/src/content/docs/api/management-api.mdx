@@ -1,0 +1,1332 @@
+---
+title: "Management API Reference"
+description: "Server-side API for managing contacts, campaigns, segments, referrals, surveys, waitlists, and all platform resources."
+---
+
+import { Card, CardGrid, Badge, Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+The Management API provides full CRUD access to every resource in your GrowthOS project. It is designed for **server-side use only** — never expose your secret key in client-side code.
+
+| | |
+|---|---|
+| **Base URL** | `https://api.growthos.io/v1` |
+| **Authentication** | `Authorization: Bearer gos_sk_...` |
+| **Content-Type** | `application/json` |
+| **Rate Limit** | 10–100 req/s depending on plan |
+
+<Aside type="danger" title="Server-side only">
+  Secret keys (`gos_sk_`) grant privileged access to your project data. Never include them in frontend bundles, mobile apps, or public repositories. Use the Ingest API with write keys for client-side operations.
+</Aside>
+
+---
+
+## Quick Start
+
+```bash
+# List your first 10 contacts
+curl -X GET "https://api.growthos.io/v1/contacts?limit=10" \
+  -H "Authorization: Bearer gos_sk_live_your_secret_key" \
+  -H "Content-Type: application/json"
+```
+
+All list endpoints return paginated responses using cursor-based pagination. See the [API Overview](/growthos/api/overview/) for details on pagination, error handling, and rate limiting.
+
+---
+
+## Contacts
+
+<Badge text="contacts:read" variant="note" /> <Badge text="contacts:write" variant="note" />
+
+Contacts are the central entity in GrowthOS. Every interaction — events, campaigns, surveys, referrals — links back to a contact record in the Unified Contact Graph.
+
+### List Contacts
+
+```http
+GET /v1/contacts?limit=25&segment_id=seg_abc&tag=enterprise
+```
+
+**Query Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `limit` | integer | Items per page (max 100, default 25) |
+| `cursor` | string | Pagination cursor from previous response |
+| `segment_id` | string | Filter by segment membership |
+| `tag` | string | Filter by tag |
+| `created_after` | ISO 8601 | Contacts created after this date |
+| `created_before` | ISO 8601 | Contacts created before this date |
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "cntct_8x2m4k",
+      "email": "alice@example.com",
+      "external_id": "user_123",
+      "traits": {
+        "name": "Alice Chen",
+        "plan": "growth",
+        "company": "Acme Inc"
+      },
+      "tags": ["enterprise", "active"],
+      "created_at": "2026-01-15T10:30:00Z",
+      "updated_at": "2026-02-20T14:22:00Z"
+    }
+  ],
+  "has_more": true,
+  "next_cursor": "eyJpZCI6ImNudGN0XzhiNGsiLCJ0cyI6MTcwOTcxMn0"
+}
+```
+
+### Get Contact
+
+```http
+GET /v1/contacts/cntct_8x2m4k
+```
+
+Returns the full contact profile including traits, recent events, segment memberships, scores, and referral activity.
+
+```json
+{
+  "id": "cntct_8x2m4k",
+  "email": "alice@example.com",
+  "external_id": "user_123",
+  "traits": {
+    "name": "Alice Chen",
+    "plan": "growth",
+    "company": "Acme Inc",
+    "signed_up_at": "2026-01-15T10:30:00Z"
+  },
+  "tags": ["enterprise", "active"],
+  "scores": {
+    "engagement": 82,
+    "lead": 65
+  },
+  "segments": ["seg_active_trial", "seg_enterprise"],
+  "referral_stats": {
+    "referrals_made": 7,
+    "conversions": 3
+  },
+  "created_at": "2026-01-15T10:30:00Z",
+  "updated_at": "2026-02-20T14:22:00Z"
+}
+```
+
+### Update Contact Traits
+
+```http
+PATCH /v1/contacts/cntct_8x2m4k
+Content-Type: application/json
+```
+
+```json
+{
+  "traits": {
+    "plan": "scale",
+    "company_size": 50
+  },
+  "tags": ["enterprise", "active", "upgraded"]
+}
+```
+
+Traits are merged — only the specified fields are updated. Existing traits not included in the request are preserved.
+
+### Delete Contact
+
+```http
+DELETE /v1/contacts/cntct_8x2m4k
+```
+
+<Aside type="caution">
+  Deletion is **soft** and GDPR-compliant. The contact is marked as deleted immediately and excluded from all queries, campaigns, and segments. After a 30-day retention window, all associated data is permanently purged.
+</Aside>
+
+### Merge Duplicate Contacts
+
+```http
+POST /v1/contacts/cntct_8x2m4k/merge
+Content-Type: application/json
+```
+
+```json
+{
+  "source_contact_id": "cntct_dup_9z3n",
+  "conflict_resolution": "prefer_target"
+}
+```
+
+Merges the source contact into the target. All events, referrals, and campaign interactions from the source are reassigned. The source contact is deleted after merge.
+
+### Contact Events
+
+```http
+GET /v1/contacts/cntct_8x2m4k/events?limit=50
+```
+
+Returns the event history for a specific contact, ordered by timestamp descending.
+
+### Contact Segments
+
+```http
+GET /v1/contacts/cntct_8x2m4k/segments
+```
+
+Returns all segments this contact currently belongs to, including both static and dynamic segment memberships.
+
+---
+
+## Segments
+
+<Badge text="segments:read" variant="note" /> <Badge text="segments:write" variant="note" />
+
+Segments are dynamic groups of contacts defined by filter rules. Membership is evaluated in real time — when a contact's traits or event history change, their segment memberships update automatically.
+
+### Create Segment
+
+```http
+POST /v1/segments
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Active Trial Users",
+  "rules": {
+    "operator": "AND",
+    "conditions": [
+      {
+        "field": "traits.plan",
+        "op": "eq",
+        "value": "trial"
+      },
+      {
+        "field": "events.login",
+        "op": "count_gte",
+        "value": 3,
+        "window": "7d"
+      },
+      {
+        "field": "traits.signed_up_at",
+        "op": "gte",
+        "value": "2025-01-01"
+      }
+    ]
+  }
+}
+```
+
+**Response**
+
+```json
+{
+  "id": "seg_t7k2m",
+  "name": "Active Trial Users",
+  "rules": { "..." : "..." },
+  "contact_count": 1243,
+  "created_at": "2026-02-23T10:00:00Z",
+  "updated_at": "2026-02-23T10:00:00Z"
+}
+```
+
+### Filter Rule Operators
+
+| Operator | Description | Example |
+|---|---|---|
+| `eq` | Equals | `traits.plan` eq `"trial"` |
+| `neq` | Not equals | `traits.status` neq `"churned"` |
+| `gt`, `gte`, `lt`, `lte` | Numeric / date comparisons | `traits.mrr` gte `100` |
+| `contains` | String contains | `traits.email` contains `"@acme.com"` |
+| `exists` | Field is present | `traits.phone` exists |
+| `not_exists` | Field is absent | `traits.company` not_exists |
+| `count_gte`, `count_lte` | Event count in time window | `events.login` count_gte `3` in `"7d"` |
+| `in` | Value in list | `traits.plan` in `["growth", "scale"]` |
+
+Rules can be nested with `AND` / `OR` operators for complex conditions.
+
+### List Segments
+
+```http
+GET /v1/segments
+```
+
+### Get Segment
+
+```http
+GET /v1/segments/seg_t7k2m
+```
+
+Returns the segment definition along with the current member count.
+
+### Update Segment Rules
+
+```http
+PATCH /v1/segments/seg_t7k2m
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Active Trial Users (Updated)",
+  "rules": {
+    "operator": "AND",
+    "conditions": [
+      { "field": "traits.plan", "op": "eq", "value": "trial" },
+      { "field": "events.login", "op": "count_gte", "value": 5, "window": "7d" }
+    ]
+  }
+}
+```
+
+### Delete Segment
+
+```http
+DELETE /v1/segments/seg_t7k2m
+```
+
+### List Contacts in Segment
+
+```http
+GET /v1/segments/seg_t7k2m/contacts?limit=50
+```
+
+Returns paginated contacts that currently match the segment's filter rules.
+
+### Estimate Segment Size
+
+```http
+POST /v1/segments/seg_t7k2m/estimate
+Content-Type: application/json
+```
+
+```json
+{
+  "rules": {
+    "operator": "AND",
+    "conditions": [
+      { "field": "traits.plan", "op": "eq", "value": "trial" },
+      { "field": "events.login", "op": "count_gte", "value": 10, "window": "30d" }
+    ]
+  }
+}
+```
+
+**Response**
+
+```json
+{
+  "estimated_count": 487,
+  "total_contacts": 12500,
+  "percentage": 3.9
+}
+```
+
+Preview the contact count for a set of rules without creating or modifying a segment. Useful for testing filter rules before saving.
+
+---
+
+## Referral Programs
+
+<Badge text="referrals:read" variant="note" /> <Badge text="referrals:write" variant="note" />
+
+Manage referral programs, generate shareable links, track conversions, and view leaderboards.
+
+### Create Program
+
+```http
+POST /v1/referrals/programs
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Friend Referral Program",
+  "reward_type": "credit",
+  "reward_amount": 20,
+  "reward_currency": "USD",
+  "referee_reward": {
+    "type": "discount",
+    "amount": 15,
+    "currency": "USD"
+  },
+  "tiers": [
+    { "referrals": 5, "bonus": 50 },
+    { "referrals": 10, "bonus": 150 },
+    { "referrals": 25, "bonus": 500 }
+  ],
+  "limits": {
+    "max_referrals_per_contact": 100,
+    "conversion_window_days": 30
+  },
+  "status": "active"
+}
+```
+
+### List Programs
+
+```http
+GET /v1/referrals/programs
+```
+
+### Get Program Details
+
+```http
+GET /v1/referrals/programs/ref_prog_abc
+```
+
+Returns the program configuration along with aggregate stats (total links, conversions, total rewards issued).
+
+### Update Program
+
+```http
+PATCH /v1/referrals/programs/ref_prog_abc
+Content-Type: application/json
+```
+
+```json
+{
+  "reward_amount": 25,
+  "limits": {
+    "max_referrals_per_contact": 50
+  }
+}
+```
+
+### List Program Links
+
+```http
+GET /v1/referrals/programs/ref_prog_abc/links?limit=50
+```
+
+Returns all referral links generated for a specific program.
+
+### Generate Referral Link
+
+```http
+POST /v1/referrals/links
+Content-Type: application/json
+```
+
+```json
+{
+  "program_id": "ref_prog_abc",
+  "contact_id": "cntct_8x2m4k",
+  "channel": "email"
+}
+```
+
+**Response**
+
+```json
+{
+  "id": "ref_link_x7k2",
+  "code": "ALICE-ACME-7K2",
+  "url": "https://yourapp.com/r/ALICE-ACME-7K2",
+  "program_id": "ref_prog_abc",
+  "contact_id": "cntct_8x2m4k",
+  "conversions": 0,
+  "created_at": "2026-02-23T10:00:00Z"
+}
+```
+
+### Lookup Link by Code
+
+```http
+GET /v1/referrals/links/ALICE-ACME-7K2
+```
+
+### Link Conversions
+
+```http
+GET /v1/referrals/links/ALICE-ACME-7K2/conversions
+```
+
+Returns all conversions attributed to this referral link, including the referred contact and conversion timestamp.
+
+### Record Conversion Manually
+
+```http
+POST /v1/referrals/conversions
+Content-Type: application/json
+```
+
+```json
+{
+  "link_code": "ALICE-ACME-7K2",
+  "referred_contact_id": "cntct_new_9z3n",
+  "conversion_event": "subscription_started",
+  "metadata": {
+    "plan": "growth",
+    "value": 49.00
+  }
+}
+```
+
+Use this endpoint for server-side conversion tracking when automatic detection is not sufficient (for example, offline conversions or custom qualification criteria).
+
+### Leaderboard
+
+```http
+GET /v1/referrals/leaderboard?program_id=ref_prog_abc&limit=10
+```
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "rank": 1,
+      "contact_id": "cntct_8x2m4k",
+      "email": "alice@example.com",
+      "referrals": 23,
+      "conversions": 18,
+      "tier": "gold"
+    },
+    {
+      "rank": 2,
+      "contact_id": "cntct_b4k9m",
+      "email": "bob@example.com",
+      "referrals": 15,
+      "conversions": 11,
+      "tier": "silver"
+    }
+  ],
+  "program_id": "ref_prog_abc",
+  "has_more": true,
+  "next_cursor": "eyJyYW5rIjoyLCJpZCI6ImNudGN0X2I0azltIn0"
+}
+```
+
+---
+
+## Email Campaigns
+
+<Badge text="campaigns:read" variant="note" /> <Badge text="campaigns:write" variant="note" />
+
+GrowthOS supports two campaign types:
+
+<CardGrid>
+  <Card title="Lifecycle Campaigns" icon="rocket">
+    Event-triggered email sequences. Define a trigger event (e.g., `signup_completed`), delay, and a sequence of emails that send automatically when a contact matches the criteria.
+  </Card>
+  <Card title="Broadcast Campaigns" icon="email">
+    One-time sends to a specific segment. Ideal for announcements, product launches, and newsletters.
+  </Card>
+</CardGrid>
+
+### Create Campaign
+
+```http
+POST /v1/campaigns
+Content-Type: application/json
+```
+
+<Tabs>
+  <TabItem label="Lifecycle">
+    ```json
+    {
+      "name": "Onboarding Sequence",
+      "type": "lifecycle",
+      "trigger": {
+        "event": "signup_completed",
+        "segment_id": "seg_new_users"
+      },
+      "steps": [
+        {
+          "delay": "0m",
+          "subject": "Welcome to Acme!",
+          "template_id": "tmpl_welcome_01"
+        },
+        {
+          "delay": "2d",
+          "subject": "Getting started with your dashboard",
+          "template_id": "tmpl_onboard_02"
+        },
+        {
+          "delay": "5d",
+          "subject": "Have you tried referrals?",
+          "template_id": "tmpl_onboard_03"
+        }
+      ]
+    }
+    ```
+  </TabItem>
+  <TabItem label="Broadcast">
+    ```json
+    {
+      "name": "February Product Update",
+      "type": "broadcast",
+      "segment_id": "seg_active_users",
+      "subject": "What's new in February",
+      "template_id": "tmpl_newsletter_feb",
+      "scheduled_at": "2026-02-25T09:00:00Z"
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### List Campaigns
+
+```http
+GET /v1/campaigns?type=lifecycle&status=active
+```
+
+### Get Campaign
+
+```http
+GET /v1/campaigns/cmpgn_abc123
+```
+
+### Update Campaign
+
+```http
+PATCH /v1/campaigns/cmpgn_abc123
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Onboarding Sequence v2",
+  "steps": [
+    {
+      "delay": "0m",
+      "subject": "Welcome aboard!",
+      "template_id": "tmpl_welcome_02"
+    }
+  ]
+}
+```
+
+### Activate Campaign
+
+```http
+POST /v1/campaigns/cmpgn_abc123/activate
+```
+
+Starts the campaign. For lifecycle campaigns, new contacts matching the trigger will begin receiving emails. For broadcast campaigns, sends begin at the scheduled time (or immediately if no `scheduled_at` is set).
+
+### Pause Campaign
+
+```http
+POST /v1/campaigns/cmpgn_abc123/pause
+```
+
+Pauses a running campaign. No new emails will be sent. Contacts already mid-sequence retain their position and will resume from where they left off when reactivated.
+
+### Send Test Email
+
+```http
+POST /v1/campaigns/cmpgn_abc123/test
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "test@yourteam.com",
+  "step_index": 0
+}
+```
+
+Sends a preview of a specific campaign step to the given email address. Does not affect campaign stats.
+
+### Campaign Stats
+
+```http
+GET /v1/campaigns/cmpgn_abc123/stats
+```
+
+**Response**
+
+```json
+{
+  "campaign_id": "cmpgn_abc123",
+  "status": "active",
+  "stats": {
+    "sent": 4520,
+    "delivered": 4480,
+    "opened": 2150,
+    "clicked": 890,
+    "bounced": 40,
+    "unsubscribed": 12,
+    "open_rate": 0.48,
+    "click_rate": 0.20,
+    "bounce_rate": 0.009,
+    "unsubscribe_rate": 0.003
+  },
+  "updated_at": "2026-02-23T12:00:00Z"
+}
+```
+
+---
+
+## Surveys and NPS
+
+<Badge text="surveys:read" variant="note" /> <Badge text="surveys:write" variant="note" />
+
+Create and manage NPS, CSAT, and custom surveys with configurable triggers and frequency caps.
+
+### Create Survey
+
+```http
+POST /v1/surveys
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Post-Trial NPS",
+  "type": "nps",
+  "question": "How likely are you to recommend us to a friend or colleague?",
+  "follow_up": "What could we do better?",
+  "trigger": {
+    "segment_id": "seg_trial_ended",
+    "event": "trial_expired",
+    "delay": "1h"
+  },
+  "frequency_cap": {
+    "max_surveys_per_contact": 1,
+    "cooldown_days": 90
+  },
+  "status": "draft"
+}
+```
+
+**Survey types:** `nps` (0-10 scale), `csat` (1-5 scale), `custom` (flexible question types).
+
+### List Surveys
+
+```http
+GET /v1/surveys
+```
+
+### Get Survey
+
+```http
+GET /v1/surveys/srvy_abc123
+```
+
+### Update Survey
+
+```http
+PATCH /v1/surveys/srvy_abc123
+Content-Type: application/json
+```
+
+```json
+{
+  "question": "How likely are you to recommend Acme to a colleague?",
+  "trigger": {
+    "delay": "2h"
+  }
+}
+```
+
+### Activate Survey
+
+```http
+POST /v1/surveys/srvy_abc123/activate
+```
+
+Begins delivering the survey to contacts matching the trigger criteria.
+
+### List Responses
+
+```http
+GET /v1/surveys/srvy_abc123/responses?limit=50
+```
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "resp_7k2m",
+      "contact_id": "cntct_8x2m4k",
+      "score": 9,
+      "comment": "Love the referral feature!",
+      "category": "promoter",
+      "responded_at": "2026-02-22T15:30:00Z"
+    },
+    {
+      "id": "resp_3n5p",
+      "contact_id": "cntct_b4k9m",
+      "score": 6,
+      "comment": "Email editor could be better",
+      "category": "passive",
+      "responded_at": "2026-02-22T16:10:00Z"
+    }
+  ],
+  "has_more": true,
+  "next_cursor": "eyJpZCI6InJlc3BfM241cCJ9"
+}
+```
+
+### Survey Stats
+
+```http
+GET /v1/surveys/srvy_abc123/stats
+```
+
+**Response**
+
+```json
+{
+  "survey_id": "srvy_abc123",
+  "total_sent": 500,
+  "total_responses": 210,
+  "response_rate": 0.42,
+  "nps_score": 47,
+  "breakdown": {
+    "promoters": 130,
+    "passives": 52,
+    "detractors": 28
+  },
+  "average_score": 7.8,
+  "updated_at": "2026-02-23T12:00:00Z"
+}
+```
+
+---
+
+## Waitlists
+
+<Badge text="waitlists:read" variant="note" /> <Badge text="waitlists:write" variant="note" />
+
+Manage viral waitlists with built-in referral mechanics — contacts move up the queue by referring friends.
+
+### Create Waitlist
+
+```http
+POST /v1/waitlists
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Pro Plan Early Access",
+  "slug": "pro-early-access",
+  "referral_boost": 3,
+  "auto_approve": false,
+  "welcome_email_template_id": "tmpl_wl_welcome"
+}
+```
+
+The `referral_boost` field determines how many positions a contact moves up per successful referral.
+
+### Get Waitlist
+
+```http
+GET /v1/waitlists/wl_abc123
+```
+
+### List Entries
+
+```http
+GET /v1/waitlists/wl_abc123/entries?limit=50
+```
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "wl_entry_7k2m",
+      "contact_id": "cntct_8x2m4k",
+      "email": "alice@example.com",
+      "position": 1,
+      "referral_count": 12,
+      "status": "waiting",
+      "joined_at": "2026-01-10T08:00:00Z"
+    },
+    {
+      "id": "wl_entry_3n5p",
+      "contact_id": "cntct_b4k9m",
+      "email": "bob@example.com",
+      "position": 2,
+      "referral_count": 8,
+      "status": "waiting",
+      "joined_at": "2026-01-11T09:30:00Z"
+    }
+  ],
+  "total_entries": 3420,
+  "has_more": true,
+  "next_cursor": "eyJwb3MiOjIsImlkIjoid2xfZW50cnlfM241cCJ9"
+}
+```
+
+### Add Entry Manually
+
+```http
+POST /v1/waitlists/wl_abc123/entries
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "charlie@example.com",
+  "traits": {
+    "name": "Charlie Park",
+    "source": "partner_referral"
+  }
+}
+```
+
+### Approve Entry
+
+```http
+POST /v1/waitlists/wl_abc123/entries/wl_entry_7k2m/approve
+```
+
+Approves a single entry and sends the invite email. The entry's status changes from `waiting` to `approved`.
+
+### Batch Approve
+
+```http
+POST /v1/waitlists/wl_abc123/entries/approve-batch
+Content-Type: application/json
+```
+
+```json
+{
+  "count": 50,
+  "order": "position"
+}
+```
+
+Approves the top N entries by position. All approved contacts receive their invite email.
+
+---
+
+## Webhooks
+
+<Badge text="webhooks:read" variant="note" /> <Badge text="webhooks:write" variant="note" />
+
+Register HTTP endpoints to receive real-time event notifications from GrowthOS. All webhook payloads are signed with HMAC-SHA256 for verification. See [Authentication](/growthos/api/authentication/) for signature verification details.
+
+### Register Endpoint
+
+```http
+POST /v1/webhooks/endpoints
+Content-Type: application/json
+```
+
+```json
+{
+  "url": "https://yourserver.com/webhooks/growthos",
+  "events": [
+    "contact.created",
+    "contact.updated",
+    "referral.converted",
+    "survey.response.created",
+    "campaign.email.bounced"
+  ],
+  "secret": "whsec_your_signing_secret"
+}
+```
+
+### List Endpoints
+
+```http
+GET /v1/webhooks/endpoints
+```
+
+### Update Endpoint
+
+```http
+PATCH /v1/webhooks/endpoints/whep_abc123
+Content-Type: application/json
+```
+
+```json
+{
+  "events": [
+    "contact.created",
+    "referral.converted"
+  ]
+}
+```
+
+### Delete Endpoint
+
+```http
+DELETE /v1/webhooks/endpoints/whep_abc123
+```
+
+### Delivery Logs
+
+```http
+GET /v1/webhooks/endpoints/whep_abc123/logs?limit=25
+```
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "wh_log_9z3n",
+      "event": "referral.converted",
+      "status": "delivered",
+      "http_status": 200,
+      "attempt": 1,
+      "delivered_at": "2026-02-23T10:05:00Z",
+      "response_time_ms": 142
+    },
+    {
+      "id": "wh_log_5p7q",
+      "event": "contact.created",
+      "status": "failed",
+      "http_status": 500,
+      "attempt": 3,
+      "next_retry_at": "2026-02-23T11:00:00Z",
+      "delivered_at": null,
+      "response_time_ms": 5002
+    }
+  ],
+  "has_more": true,
+  "next_cursor": "eyJpZCI6IndoX2xvZ181cDdxIn0"
+}
+```
+
+Failed deliveries are retried with exponential backoff (up to 5 attempts over 24 hours).
+
+### Send Test Event
+
+```http
+POST /v1/webhooks/endpoints/whep_abc123/test
+Content-Type: application/json
+```
+
+```json
+{
+  "event": "contact.created"
+}
+```
+
+Sends a synthetic test event to your endpoint so you can verify your integration is working correctly.
+
+---
+
+## Analytics
+
+<Badge text="analytics:read" variant="note" />
+
+Query aggregated analytics data across your project. The analytics API is read-only.
+
+### Flexible Query
+
+```http
+POST /v1/analytics/query
+Content-Type: application/json
+```
+
+```json
+{
+  "type": "event_count",
+  "event": "signup_completed",
+  "interval": "day",
+  "from": "2026-02-01",
+  "to": "2026-02-23",
+  "filters": {
+    "traits.plan": "growth"
+  },
+  "group_by": "traits.source"
+}
+```
+
+**Response**
+
+```json
+{
+  "type": "event_count",
+  "data": [
+    { "date": "2026-02-01", "groups": { "organic": 45, "referral": 23, "paid": 18 } },
+    { "date": "2026-02-02", "groups": { "organic": 52, "referral": 28, "paid": 15 } }
+  ],
+  "total": 1420
+}
+```
+
+Supported query types: `event_count`, `unique_contacts`, `funnel`, `cohort_retention`.
+
+### Overview
+
+```http
+GET /v1/analytics/overview
+```
+
+**Response**
+
+```json
+{
+  "total_contacts": 12500,
+  "contacts_30d": 1830,
+  "events_today": 4520,
+  "events_avg_daily": 3800,
+  "active_campaigns": 6,
+  "nps_score": 47,
+  "referral_conversion_rate": 0.23
+}
+```
+
+### Event Stream
+
+```http
+GET /v1/analytics/events?limit=50&event=signup_completed
+```
+
+Returns recent events in reverse chronological order. Filterable by event name, contact, and date range.
+
+### Funnel Analysis
+
+```http
+GET /v1/analytics/funnels/fnl_abc123
+```
+
+Returns step-by-step conversion rates for a defined funnel.
+
+### Cohort Retention
+
+```http
+GET /v1/analytics/cohorts/chrt_abc123
+```
+
+Returns retention data for a defined cohort, with weekly or monthly buckets.
+
+---
+
+## Settings
+
+<Badge text="settings:read" variant="note" /> <Badge text="settings:write" variant="note" />
+
+Manage project configuration and API keys.
+
+### Get Settings
+
+```http
+GET /v1/settings
+```
+
+**Response**
+
+```json
+{
+  "project_id": "proj_abc123",
+  "name": "Acme Growth",
+  "domain": "acme.com",
+  "timezone": "America/New_York",
+  "default_from_email": "growth@acme.com",
+  "created_at": "2025-06-01T00:00:00Z"
+}
+```
+
+### Update Settings
+
+```http
+PATCH /v1/settings
+Content-Type: application/json
+```
+
+```json
+{
+  "timezone": "Europe/London",
+  "default_from_email": "hello@acme.com"
+}
+```
+
+### List API Keys
+
+```http
+GET /v1/settings/keys
+```
+
+Returns all API keys for the project. Secret key values are redacted — only the last four characters are shown.
+
+```json
+{
+  "data": [
+    {
+      "id": "key_8x2m4k",
+      "name": "Backend Service",
+      "type": "secret",
+      "key_hint": "...4k9m",
+      "scopes": ["contacts:read", "contacts:write", "campaigns:read"],
+      "created_at": "2026-01-01T00:00:00Z",
+      "last_used_at": "2026-02-23T09:45:00Z"
+    }
+  ]
+}
+```
+
+### Create API Key
+
+```http
+POST /v1/settings/keys
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Analytics Dashboard",
+  "scopes": ["analytics:read", "contacts:read"]
+}
+```
+
+**Response**
+
+```json
+{
+  "id": "key_new_7k2m",
+  "name": "Analytics Dashboard",
+  "key": "gos_sk_live_abc123def456...",
+  "scopes": ["analytics:read", "contacts:read"],
+  "created_at": "2026-02-23T10:00:00Z"
+}
+```
+
+<Aside type="caution">
+  The full secret key is returned **only once** at creation time. Store it in your secrets manager immediately. If you lose it, you must revoke the key and create a new one.
+</Aside>
+
+### Revoke API Key
+
+```http
+DELETE /v1/settings/keys/key_8x2m4k
+```
+
+Revoked keys enter a 24-hour grace period before permanent deactivation. See [Authentication](/growthos/api/authentication/) for details on key rotation.
+
+---
+
+## Endpoint Summary
+
+A complete reference of all Management API endpoints.
+
+### Contacts
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/v1/contacts` | List contacts |
+| `GET` | `/v1/contacts/:id` | Get contact profile |
+| `PATCH` | `/v1/contacts/:id` | Update contact traits |
+| `DELETE` | `/v1/contacts/:id` | Soft-delete contact |
+| `POST` | `/v1/contacts/:id/merge` | Merge duplicate contacts |
+| `GET` | `/v1/contacts/:id/events` | Contact event history |
+| `GET` | `/v1/contacts/:id/segments` | Contact segment memberships |
+
+### Segments
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/segments` | Create segment |
+| `GET` | `/v1/segments` | List segments |
+| `GET` | `/v1/segments/:id` | Get segment with member count |
+| `PATCH` | `/v1/segments/:id` | Update segment rules |
+| `DELETE` | `/v1/segments/:id` | Delete segment |
+| `GET` | `/v1/segments/:id/contacts` | List contacts in segment |
+| `POST` | `/v1/segments/:id/estimate` | Preview segment count |
+
+### Referral Programs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/referrals/programs` | Create referral program |
+| `GET` | `/v1/referrals/programs` | List programs |
+| `GET` | `/v1/referrals/programs/:id` | Get program details |
+| `PATCH` | `/v1/referrals/programs/:id` | Update program |
+| `GET` | `/v1/referrals/programs/:id/links` | List program links |
+| `POST` | `/v1/referrals/links` | Generate referral link |
+| `GET` | `/v1/referrals/links/:code` | Lookup link by code |
+| `GET` | `/v1/referrals/links/:code/conversions` | Link conversions |
+| `POST` | `/v1/referrals/conversions` | Record manual conversion |
+| `GET` | `/v1/referrals/leaderboard` | Top referrers leaderboard |
+
+### Email Campaigns
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/campaigns` | Create campaign |
+| `GET` | `/v1/campaigns` | List campaigns |
+| `GET` | `/v1/campaigns/:id` | Get campaign |
+| `PATCH` | `/v1/campaigns/:id` | Update campaign |
+| `POST` | `/v1/campaigns/:id/activate` | Start campaign |
+| `POST` | `/v1/campaigns/:id/pause` | Pause campaign |
+| `POST` | `/v1/campaigns/:id/test` | Send test email |
+| `GET` | `/v1/campaigns/:id/stats` | Campaign statistics |
+
+### Surveys and NPS
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/surveys` | Create survey |
+| `GET` | `/v1/surveys` | List surveys |
+| `GET` | `/v1/surveys/:id` | Get survey |
+| `PATCH` | `/v1/surveys/:id` | Update survey |
+| `POST` | `/v1/surveys/:id/activate` | Activate survey |
+| `GET` | `/v1/surveys/:id/responses` | List responses |
+| `GET` | `/v1/surveys/:id/stats` | Aggregate stats |
+
+### Waitlists
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/waitlists` | Create waitlist |
+| `GET` | `/v1/waitlists/:id` | Get waitlist |
+| `GET` | `/v1/waitlists/:id/entries` | List entries |
+| `POST` | `/v1/waitlists/:id/entries` | Add entry manually |
+| `POST` | `/v1/waitlists/:id/entries/:entry_id/approve` | Approve entry |
+| `POST` | `/v1/waitlists/:id/entries/approve-batch` | Batch approve |
+
+### Webhooks
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/webhooks/endpoints` | Register endpoint |
+| `GET` | `/v1/webhooks/endpoints` | List endpoints |
+| `PATCH` | `/v1/webhooks/endpoints/:id` | Update endpoint |
+| `DELETE` | `/v1/webhooks/endpoints/:id` | Delete endpoint |
+| `GET` | `/v1/webhooks/endpoints/:id/logs` | Delivery logs |
+| `POST` | `/v1/webhooks/endpoints/:id/test` | Send test event |
+
+### Analytics
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/analytics/query` | Flexible analytics query |
+| `GET` | `/v1/analytics/overview` | Dashboard overview |
+| `GET` | `/v1/analytics/events` | Event stream |
+| `GET` | `/v1/analytics/funnels/:id` | Funnel analysis |
+| `GET` | `/v1/analytics/cohorts/:id` | Cohort retention |
+
+### Settings
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/v1/settings` | Get project settings |
+| `PATCH` | `/v1/settings` | Update settings |
+| `GET` | `/v1/settings/keys` | List API keys |
+| `POST` | `/v1/settings/keys` | Create API key |
+| `DELETE` | `/v1/settings/keys/:id` | Revoke API key |
+
+---
+
+<Aside type="note" title="More endpoints coming soon">
+  Additional module-specific endpoints — including coupons, in-app nudges, onboarding checklists, gated content, and review prompts — follow the same CRUD pattern documented above. These endpoints will be available as each phase of the platform ships. Subscribe to the changelog for updates.
+</Aside>
+
+<CardGrid>
+  <LinkCard
+    title="Authentication & Security"
+    description="API key types, scopes, HMAC signing, and key rotation."
+    href="/growthos/api/authentication/"
+  />
+  <LinkCard
+    title="API Overview"
+    description="Versioning, rate limits, error model, and pagination."
+    href="/growthos/api/overview/"
+  />
+</CardGrid>

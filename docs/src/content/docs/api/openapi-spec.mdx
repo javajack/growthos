@@ -1,0 +1,288 @@
+---
+title: "OpenAPI 3.1 Specification"
+description: "Machine-readable API specification for code generation, testing, and integration tooling."
+---
+
+import { Card, CardGrid, Badge, Tabs, TabItem, Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+## Specification Overview
+
+GrowthOS publishes **OpenAPI 3.1** specifications for both APIs. These machine-readable specs are the source of truth for request/response shapes, authentication, and endpoint metadata.
+
+<CardGrid>
+  <Card title="Ingest API Spec" icon="document">
+    **Endpoint:** `https://api.growthos.io/openapi/ingest.yaml`
+
+    Covers the client-facing event ingestion endpoints — `track`, `identify`, `page`, and `batch`.
+  </Card>
+  <Card title="Management API Spec" icon="setting">
+    **Endpoint:** `https://api.growthos.io/openapi/management.yaml`
+
+    Covers all server-side CRUD operations for contacts, segments, referrals, campaigns, surveys, waitlists, webhooks, analytics, and settings.
+  </Card>
+</CardGrid>
+
+These specs can be consumed by:
+
+- **Code generators** — openapi-generator, Orval, openapi-typescript
+- **Testing tools** — Postman, Insomnia, Hurl
+- **Documentation generators** — Redoc, Stoplight, Swagger UI
+
+<Aside type="tip">
+Import the spec URL directly into Postman or Insomnia to get a ready-made collection with every endpoint, parameter, and example body pre-filled.
+</Aside>
+
+---
+
+## Spec Structure
+
+Below is a condensed skeleton of the Management API specification showing the overall layout, key paths, schemas, and security configuration.
+
+```yaml
+openapi: "3.1.0"
+info:
+  title: GrowthOS Management API
+  version: "1.0.0"
+  description: Server-side API for managing all GrowthOS resources.
+  contact:
+    name: GrowthOS
+    url: https://javajack.github.io/growthos/api/overview/
+servers:
+  - url: https://api.growthos.io/v1
+    description: Production
+  - url: https://api-staging.growthos.io/v1
+    description: Staging
+security:
+  - BearerAuth: []
+paths:
+  /contacts:
+    get:
+      summary: List contacts
+      operationId: listContacts
+      tags: [Contacts]
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: Paginated list of contacts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactList"
+  /contacts/{id}:
+    get:
+      summary: Get a contact
+      operationId: getContact
+      tags: [Contacts]
+  # ... (abbreviated — full spec covers all endpoints)
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: "gos_sk_*"
+  schemas:
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "con_abc123"
+        user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        traits:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ContactList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        has_more:
+          type: boolean
+        next_cursor:
+          type: string
+          nullable: true
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+        request_id:
+          type: string
+  parameters:
+    cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+tags:
+  - name: Contacts
+  - name: Segments
+  - name: Referrals
+  - name: Campaigns
+  - name: Surveys
+  - name: Waitlists
+  - name: Webhooks
+  - name: Analytics
+  - name: Settings
+```
+
+---
+
+## Schema Design Principles
+
+The GrowthOS API follows consistent conventions across every resource and endpoint.
+
+<Steps>
+1. **Prefixed IDs** — All resource IDs use a type prefix for readability and debugging: `con_` (contacts), `seg_` (segments), `prog_` (programs), `camp_` (campaigns), `srv_` (surveys), `wl_` (waitlists), `evt_` (events).
+
+2. **ISO 8601 timestamps** — Every `created_at`, `updated_at`, and event timestamp is in ISO 8601 format with UTC timezone.
+
+3. **Cursor pagination** — All list endpoints use opaque cursor-based pagination with `has_more` and `next_cursor` fields. No offset pagination.
+
+4. **Explicit nullability** — Nullable fields are marked with `nullable: true` in the spec. Fields without this annotation are always present.
+
+5. **Enum status fields** — Status fields use strict enums (e.g., `active`, `paused`, `archived`) so client code can safely pattern-match.
+
+6. **Consistent error schema** — Every error response uses the same `Error` schema with `code`, `message`, `details`, and `request_id`.
+</Steps>
+
+<Aside type="note">
+The `request_id` field is included in every response (success and error) and should be referenced in support requests for fast debugging.
+</Aside>
+
+---
+
+## Code Generation
+
+Use the published spec URLs with standard OpenAPI tooling to generate clients, types, and collections.
+
+<Tabs>
+  <TabItem label="TypeScript">
+    Generate TypeScript type definitions from the spec:
+
+    ```bash
+    npx openapi-typescript \
+      https://api.growthos.io/openapi/management.yaml \
+      -o growthos-types.d.ts
+    ```
+
+    Then use the generated types in your application:
+
+    ```typescript
+    import type { components } from "./growthos-types";
+
+    type Contact = components["schemas"]["Contact"];
+    type ContactList = components["schemas"]["ContactList"];
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    Generate a full Python client with models and API classes:
+
+    ```bash
+    openapi-generator-cli generate \
+      -i https://api.growthos.io/openapi/management.yaml \
+      -g python \
+      -o growthos_client \
+      --additional-properties=packageName=growthos
+    ```
+
+    Then use the generated client:
+
+    ```python
+    from growthos.api import ContactsApi
+    from growthos.configuration import Configuration
+
+    config = Configuration(
+        host="https://api.growthos.io/v1",
+        access_token="gos_sk_your_key"
+    )
+    api = ContactsApi(configuration=config)
+    contacts = api.list_contacts(limit=25)
+    ```
+  </TabItem>
+  <TabItem label="Postman">
+    Import the spec directly into Postman:
+
+    1. Open Postman and click **Import**
+    2. Select **Link** and paste the spec URL:
+       `https://api.growthos.io/openapi/management.yaml`
+    3. Postman generates a collection with every endpoint
+    4. Set the `BearerAuth` token in the collection variables
+    5. Start making requests
+  </TabItem>
+</Tabs>
+
+---
+
+## Changelog
+
+GrowthOS tracks spec changes alongside the API versioning strategy.
+
+<Card title="Versioning rules" icon="information">
+  - **Additive changes** (new endpoints, new optional fields, new enum values) are published to the current spec version without a version bump.
+  - **Breaking changes** (removed fields, type changes, removed endpoints) result in a new major API version with a separate spec file.
+  - The spec `info.version` field reflects the latest revision date within a major version.
+</Card>
+
+<Aside type="caution">
+Subscribe to the GrowthOS changelog to be notified of spec updates. Breaking changes are announced at least 90 days before the previous version is deprecated.
+</Aside>
+
+---
+
+## Tags Organization
+
+Each OpenAPI tag maps to a functional area and requires specific API key scopes.
+
+| Tag | Description | Required Scope |
+|---|---|---|
+| **Contacts** | Contact CRUD and lookup | `contacts:read` / `contacts:write` |
+| **Segments** | Segment rules and membership | `segments:read` / `segments:write` |
+| **Referrals** | Programs, links, conversions | `referrals:read` / `referrals:write` |
+| **Campaigns** | Email campaigns and sequences | `campaigns:read` / `campaigns:write` |
+| **Surveys** | Survey management and responses | `surveys:read` / `surveys:write` |
+| **Waitlists** | Waitlist and entries | `waitlists:read` / `waitlists:write` |
+| **Webhooks** | Webhook endpoint management | `webhooks:read` / `webhooks:write` |
+| **Analytics** | Queries, funnels, cohorts | `analytics:read` |
+| **Settings** | Project config and API keys | `settings:read` / `settings:write` |
+
+<Aside type="tip">
+When generating an API key, select only the scopes your integration needs. A reporting dashboard only requires `analytics:read` and `contacts:read` — no write scopes necessary.
+</Aside>
+
+<LinkCard
+  title="Authentication Guide"
+  description="Learn how to create API keys, manage scopes, and authenticate requests."
+  href="/growthos/api/authentication/"
+/>
