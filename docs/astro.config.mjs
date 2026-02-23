@@ -26,12 +26,60 @@ export default defineConfig({
 				Footer: './src/components/Footer.astro',
 			},
 			head: [
+				// Google Consent Mode v2 - MUST load BEFORE gtag.js (synchronous)
+				{
+					tag: 'script',
+					content: `
+						window.dataLayer = window.dataLayer || [];
+						function gtag(){dataLayer.push(arguments);}
+
+						function isGDPRRegion() {
+							const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+							const euTimezones = ['Europe/', 'Atlantic/Reykjavik', 'Atlantic/Azores', 'Atlantic/Madeira'];
+							return euTimezones.some(zone => tz.startsWith(zone));
+						}
+
+						const isGDPR = isGDPRRegion();
+
+						gtag('consent', 'default', {
+							'ad_storage': 'denied',
+							'ad_user_data': 'denied',
+							'ad_personalization': 'denied',
+							'analytics_storage': isGDPR ? 'denied' : 'granted',
+							'functionality_storage': 'granted',
+							'personalization_storage': 'denied',
+							'security_storage': 'granted',
+							'wait_for_update': 500,
+						});
+
+						window.__isGDPRRegion = isGDPR;
+					`,
+				},
+				// Google Analytics 4 (shared GA property across javajack.github.io)
+				{
+					tag: 'script',
+					attrs: { async: true, src: 'https://www.googletagmanager.com/gtag/js?id=G-G986QLPFZ1' },
+				},
+				{
+					tag: 'script',
+					content: `
+						window.dataLayer = window.dataLayer || [];
+						function gtag(){dataLayer.push(arguments);}
+						gtag('js', new Date());
+						gtag('config', 'G-G986QLPFZ1', {
+							'anonymize_ip': true,
+							'cookie_flags': 'SameSite=None;Secure'
+						});
+					`,
+				},
+				// Yandex Webmaster verification (shared across javajack.github.io)
+				{ tag: 'meta', attrs: { name: 'yandex-verification', content: '5281e40eca9463d2' } },
 				// SEO meta tags
 				{
 					tag: 'meta',
 					attrs: {
 						name: 'keywords',
-						content: 'growth platform, SaaS growth tools, referral engine, lifecycle emails, NPS surveys, waitlist, contact graph, growth engineering, indie SaaS, product-led growth',
+						content: 'growth platform, SaaS growth tools, referral engine, lifecycle emails, NPS surveys, waitlist, contact graph, growth engineering, indie SaaS, product-led growth, marketing automation, unified growth',
 					},
 				},
 				{
@@ -49,7 +97,13 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://javajack.github.io/growthos/og-image.svg' } },
 				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+				{ tag: 'meta', attrs: { property: 'og:image:type', content: 'image/svg+xml' } },
+				// Twitter / X
+				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://javajack.github.io/growthos/og-image.svg' } },
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+				{ tag: 'meta', attrs: { name: 'twitter:site', content: '@webiyo' } },
+				// Cloudflare Web Analytics (shared across javajack.github.io)
+				{ tag: 'script', attrs: { defer: true, src: 'https://static.cloudflareinsights.com/beacon.min.js', 'data-cf-beacon': '{"token": "7ce325bb227e4b42a8406f369ff4e788"}' } },
 				// Structured Data (JSON-LD)
 				{
 					tag: 'script',
@@ -71,6 +125,13 @@ export default defineConfig({
 									priceCurrency: 'USD',
 								},
 								author: { '@id': '#rakesh' },
+							},
+							{
+								'@type': 'Product',
+								name: 'GrowthOS — Unified Growth Platform',
+								description: 'Replace 5+ disconnected growth tools with one integrated platform. Referral engine, lifecycle emails, viral waitlist, NPS surveys, and embeddable components.',
+								brand: { '@type': 'Brand', name: 'GrowthOS' },
+								category: 'Growth Marketing Software',
 							},
 							{
 								'@type': 'Person',

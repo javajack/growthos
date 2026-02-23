@@ -1,6 +1,6 @@
 /* ===========================
    Custom Starlight Theme
-   GrowthOS — Blue/Indigo Brand
+   GrowthOS — Vibrant Indigo/Violet
    =========================== */
 
 /* --- Smooth scroll --- */
@@ -10,40 +10,53 @@ html {
 
 /* --- Accent Color Scheme (Light) --- */
 :root {
-	--sl-color-accent-low: #dbeafe;
-	--sl-color-accent: #2563eb;
-	--sl-color-accent-high: #1e3a5f;
+	--sl-color-accent-low: #ede9fe;
+	--sl-color-accent: #6366f1;
+	--sl-color-accent-high: #312e81;
 
-	/* Typography */
+	/* Typography — larger, more readable */
 	--sl-font: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
 		'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 	--sl-font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code',
 		Menlo, Consolas, 'DejaVu Sans Mono', monospace;
 
-	/* Content width */
-	--sl-content-width: 55rem;
+	/* Wider content area for readability */
+	--sl-content-width: 58rem;
+	--sl-text-body: 1.05rem;
 }
 
 /* --- Accent Color Scheme (Dark) --- */
 :root[data-theme='dark'] {
-	--sl-color-accent-low: #1e3a5f;
-	--sl-color-accent: #60a5fa;
-	--sl-color-accent-high: #dbeafe;
+	--sl-color-accent-low: #2e1065;
+	--sl-color-accent: #a78bfa;
+	--sl-color-accent-high: #ede9fe;
 }
 
 /* ===========================
-   Hero Section
+   Hero Section — larger, more vibrant
    =========================== */
 .hero {
-	background: linear-gradient(135deg, var(--sl-color-accent-low) 0%, transparent 60%);
-	border-radius: 1rem;
-	padding: 2rem;
+	background: linear-gradient(135deg, var(--sl-color-accent-low) 0%, transparent 50%);
+	border-radius: 1.25rem;
+	padding: 2.5rem;
+}
+
+:root[data-theme='dark'] .hero {
+	background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, transparent 50%);
 }
 
 .hero .tagline {
-	font-size: 1.35rem !important;
-	line-height: 1.6;
-	max-width: 42ch;
+	font-size: 1.4rem !important;
+	line-height: 1.7;
+	max-width: 48ch;
+	color: var(--sl-color-gray-2);
+}
+
+/* Hero image — larger and not squeezed */
+.hero img {
+	max-width: 340px !important;
+	width: 340px !important;
+	height: auto !important;
 }
 
 /* Animated glow on hero action buttons */
@@ -53,18 +66,19 @@ html {
 }
 
 .hero .action a.primary {
-	box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+	box-shadow: 0 0 0 rgba(99, 102, 241, 0);
 	transition: box-shadow 0.4s ease, transform 0.2s ease;
+	font-weight: 600;
 }
 
 .hero .action a.primary:hover {
-	box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
-	transform: translateY(-1px);
+	box-shadow: 0 0 24px rgba(99, 102, 241, 0.4);
+	transform: translateY(-2px);
 }
 
 @keyframes subtle-glow {
-	0%, 100% { box-shadow: 0 0 8px rgba(37, 99, 235, 0.15); }
-	50% { box-shadow: 0 0 18px rgba(37, 99, 235, 0.3); }
+	0%, 100% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.15); }
+	50% { box-shadow: 0 0 22px rgba(99, 102, 241, 0.35); }
 }
 
 .hero .action a.primary {
@@ -72,22 +86,29 @@ html {
 }
 
 /* ===========================
-   Card Improvements
+   Card Improvements — more spacious
    =========================== */
 .card {
 	transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 	border: 1px solid var(--sl-color-gray-5);
-	border-radius: 0.75rem;
+	border-radius: 0.875rem;
+	padding: 1.25rem;
 }
 
 .card:hover {
-	transform: translateY(-3px);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-	border-image: linear-gradient(135deg, var(--sl-color-accent), var(--sl-color-accent-low)) 1;
+	transform: translateY(-4px);
+	box-shadow: 0 10px 28px rgba(99, 102, 241, 0.1);
+	border-color: var(--sl-color-accent);
 }
 
 :root[data-theme='dark'] .card:hover {
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+	box-shadow: 0 10px 28px rgba(99, 102, 241, 0.15);
+}
+
+/* Card title — vibrant accent */
+.card .card-title,
+.card h3 {
+	color: var(--sl-color-accent);
 }
 
 /* ===========================
@@ -96,20 +117,30 @@ html {
 nav.sidebar a[aria-current='page'],
 nav.sidebar a[aria-current='true'] {
 	border-radius: 0.375rem;
+	font-weight: 600;
 	transition: background-color 0.2s ease, color 0.2s ease, border-radius 0.2s ease;
 }
 
 nav.sidebar a {
 	transition: color 0.15s ease, background-color 0.15s ease;
 	border-radius: 0.25rem;
+	padding: 0.3rem 0.5rem;
+}
+
+/* Sidebar group labels — more prominent */
+nav.sidebar summary,
+nav.sidebar .group-label {
+	font-weight: 700;
+	letter-spacing: 0.01em;
 }
 
 /* ===========================
    Code Block Styling
    =========================== */
 pre {
-	border-radius: 0.5rem !important;
+	border-radius: 0.625rem !important;
 	border: 1px solid var(--sl-color-gray-5);
+	font-size: 0.92rem;
 }
 
 :root pre {
@@ -122,16 +153,72 @@ pre {
 }
 
 code:not(pre code) {
-	padding: 0.15em 0.35em;
-	border-radius: 0.25rem;
-	font-size: 0.9em;
+	padding: 0.2em 0.4em;
+	border-radius: 0.3rem;
+	font-size: 0.88em;
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
 }
 
 /* ===========================
-   Content Area
+   Content Area — improved readability
    =========================== */
 .content-panel {
-	line-height: 1.75;
+	line-height: 1.8;
+}
+
+/* Larger headings with accent tint */
+.sl-markdown-content h2 {
+	font-size: 1.6rem;
+	margin-top: 2.5rem;
+	padding-bottom: 0.4rem;
+	border-bottom: 2px solid var(--sl-color-accent-low);
+}
+
+.sl-markdown-content h3 {
+	font-size: 1.25rem;
+	margin-top: 2rem;
+}
+
+/* Tables — cleaner, more spacious */
+.sl-markdown-content table {
+	font-size: 0.95rem;
+}
+
+.sl-markdown-content th {
+	background: var(--sl-color-accent-low);
+	font-weight: 700;
+}
+
+.sl-markdown-content td,
+.sl-markdown-content th {
+	padding: 0.65rem 0.85rem;
+}
+
+/* Blockquotes — vibrant left border */
+.sl-markdown-content blockquote {
+	border-left: 4px solid var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+	padding: 1rem 1.25rem;
+	border-radius: 0 0.5rem 0.5rem 0;
+	font-style: italic;
+}
+
+/* ===========================
+   Aside / Callout enhancements
+   =========================== */
+.starlight-aside {
+	border-radius: 0.75rem;
+	padding: 1rem 1.25rem;
+}
+
+/* ===========================
+   Badge enhancements — bolder
+   =========================== */
+.sl-badge {
+	font-weight: 700;
+	font-size: 0.8rem;
+	letter-spacing: 0.02em;
 }
 
 /* ===========================
@@ -139,12 +226,27 @@ code:not(pre code) {
    =========================== */
 .sl-markdown-content a {
 	text-decoration-color: var(--sl-color-accent);
-	text-underline-offset: 0.15em;
+	text-underline-offset: 0.18em;
 	transition: text-decoration-color 0.2s ease, color 0.2s ease;
+	font-weight: 500;
 }
 
 .sl-markdown-content a:hover {
 	text-decoration-color: currentColor;
+	color: var(--sl-color-accent);
+}
+
+/* ===========================
+   Mermaid diagram readability
+   =========================== */
+.mermaid {
+	margin: 1.5rem 0;
+	overflow-x: auto;
+}
+
+.mermaid svg {
+	max-width: 100%;
+	min-height: 200px;
 }
 
 /* ===========================
@@ -168,4 +270,13 @@ code:not(pre code) {
    =========================== */
 .sl-steps > li::before {
 	background: var(--sl-color-accent) !important;
+}
+
+/* ===========================
+   HR separators — subtle, not heavy
+   =========================== */
+.sl-markdown-content hr {
+	border: none;
+	border-top: 1px solid var(--sl-color-gray-5);
+	margin: 2rem 0;
 }

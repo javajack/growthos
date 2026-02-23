@@ -1,0 +1,58 @@
+<svg width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer ring -->
+  <circle cx="210" cy="210" r="180" fill="none" stroke="#6366f1" stroke-width="2" opacity="0.12"/>
+  <circle cx="210" cy="210" r="140" fill="none" stroke="#6366f1" stroke-width="2" opacity="0.2"/>
+  <circle cx="210" cy="210" r="100" fill="none" stroke="#6366f1" stroke-width="2.5" opacity="0.3"/>
+
+  <!-- Central hub (Contact Graph) -->
+  <circle cx="210" cy="210" r="36" fill="#6366f1" opacity="0.15"/>
+  <circle cx="210" cy="210" r="24" fill="#6366f1" opacity="0.3"/>
+  <circle cx="210" cy="210" r="10" fill="#818cf8"/>
+
+  <!-- Module nodes on rings -->
+  <!-- Referrals (top) -->
+  <circle cx="210" cy="70" r="18" fill="#818cf8" opacity="0.2"/>
+  <circle cx="210" cy="70" r="10" fill="#818cf8"/>
+  <line x1="210" y1="88" x2="210" y2="186" stroke="#818cf8" stroke-width="1.5" opacity="0.4" stroke-dasharray="4 3"/>
+
+  <!-- Emails (right) -->
+  <circle cx="350" cy="210" r="18" fill="#a78bfa" opacity="0.2"/>
+  <circle cx="350" cy="210" r="10" fill="#a78bfa"/>
+  <line x1="332" y1="210" x2="234" y2="210" stroke="#a78bfa" stroke-width="1.5" opacity="0.4" stroke-dasharray="4 3"/>
+
+  <!-- Surveys (bottom) -->
+  <circle cx="210" cy="350" r="18" fill="#c084fc" opacity="0.2"/>
+  <circle cx="210" cy="350" r="10" fill="#c084fc"/>
+  <line x1="210" y1="332" x2="210" y2="234" stroke="#c084fc" stroke-width="1.5" opacity="0.4" stroke-dasharray="4 3"/>
+
+  <!-- Waitlist (left) -->
+  <circle cx="70" cy="210" r="18" fill="#818cf8" opacity="0.2"/>
+  <circle cx="70" cy="210" r="10" fill="#818cf8"/>
+  <line x1="88" y1="210" x2="186" y2="210" stroke="#818cf8" stroke-width="1.5" opacity="0.4" stroke-dasharray="4 3"/>
+
+  <!-- Nudges (top-right) -->
+  <circle cx="320" cy="100" r="14" fill="#a78bfa" opacity="0.2"/>
+  <circle cx="320" cy="100" r="8" fill="#a78bfa"/>
+  <line x1="310" y1="110" x2="227" y2="197" stroke="#a78bfa" stroke-width="1.2" opacity="0.3" stroke-dasharray="4 3"/>
+
+  <!-- Segments (bottom-right) -->
+  <circle cx="320" cy="320" r="14" fill="#c084fc" opacity="0.2"/>
+  <circle cx="320" cy="320" r="8" fill="#c084fc"/>
+  <line x1="310" y1="310" x2="227" y2="227" stroke="#c084fc" stroke-width="1.2" opacity="0.3" stroke-dasharray="4 3"/>
+
+  <!-- Analytics (bottom-left) -->
+  <circle cx="100" cy="320" r="14" fill="#818cf8" opacity="0.2"/>
+  <circle cx="100" cy="320" r="8" fill="#818cf8"/>
+  <line x1="110" y1="310" x2="193" y2="227" stroke="#818cf8" stroke-width="1.2" opacity="0.3" stroke-dasharray="4 3"/>
+
+  <!-- Scoring (top-left) -->
+  <circle cx="100" cy="100" r="14" fill="#a78bfa" opacity="0.2"/>
+  <circle cx="100" cy="100" r="8" fill="#a78bfa"/>
+  <line x1="110" y1="110" x2="193" y2="193" stroke="#a78bfa" stroke-width="1.2" opacity="0.3" stroke-dasharray="4 3"/>
+
+  <!-- Pulse animation circles -->
+  <circle cx="210" cy="210" r="50" fill="none" stroke="#6366f1" stroke-width="1" opacity="0.15">
+    <animate attributeName="r" values="50;70;50" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.15;0.05;0.15" dur="3s" repeatCount="indefinite"/>
+  </circle>
+</svg>

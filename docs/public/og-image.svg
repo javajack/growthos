@@ -1,0 +1,47 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <rect x="40" y="40" width="1120" height="550" rx="16" fill="#1e293b" stroke="#6366f1" stroke-width="2"/>
+
+  <!-- Decorative grid dots -->
+  <circle cx="100" cy="100" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="150" cy="100" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="200" cy="100" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="100" cy="150" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="150" cy="150" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="1050" cy="480" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="1100" cy="480" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="1050" cy="530" r="2" fill="#6366f1" opacity="0.3"/>
+  <circle cx="1100" cy="530" r="2" fill="#6366f1" opacity="0.3"/>
+
+  <!-- Accent glow -->
+  <ellipse cx="600" cy="250" rx="300" ry="80" fill="#6366f1" opacity="0.08"/>
+
+  <!-- Title -->
+  <text x="600" y="210" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="800" fill="#a5b4fc">GrowthOS</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="290" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="600" fill="#ffffff">Unified Growth Platform for SaaS Teams</text>
+
+  <!-- Tagline -->
+  <text x="600" y="360" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#94a3b8">Replace 5+ disconnected growth tools with one integrated platform</text>
+
+  <!-- Feature pills -->
+  <rect x="200" y="400" width="140" height="36" rx="18" fill="#6366f1" opacity="0.2" stroke="#6366f1" stroke-width="1"/>
+  <text x="270" y="424" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#a5b4fc">Referrals</text>
+
+  <rect x="360" y="400" width="120" height="36" rx="18" fill="#6366f1" opacity="0.2" stroke="#6366f1" stroke-width="1"/>
+  <text x="420" y="424" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#a5b4fc">Emails</text>
+
+  <rect x="500" y="400" width="130" height="36" rx="18" fill="#6366f1" opacity="0.2" stroke="#6366f1" stroke-width="1"/>
+  <text x="565" y="424" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#a5b4fc">Surveys</text>
+
+  <rect x="650" y="400" width="130" height="36" rx="18" fill="#6366f1" opacity="0.2" stroke="#6366f1" stroke-width="1"/>
+  <text x="715" y="424" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#a5b4fc">Waitlist</text>
+
+  <rect x="800" y="400" width="180" height="36" rx="18" fill="#6366f1" opacity="0.2" stroke="#6366f1" stroke-width="1"/>
+  <text x="890" y="424" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#a5b4fc">Contact Graph</text>
+
+  <!-- Author -->
+  <text x="600" y="530" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#64748b">by Rakesh Waghela</text>
+</svg>
